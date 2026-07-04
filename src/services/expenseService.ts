@@ -1,10 +1,13 @@
 import {
   addDoc,
   collection,
+  deleteDoc,
+  doc,
   getDocs,
   orderBy,
   query,
   serverTimestamp,
+  updateDoc,
 } from "firebase/firestore";
 
 import { db } from "../firebase/config";
@@ -32,9 +35,11 @@ export async function createExpense(
 }
 
 /**
- * Get all expenses for a user
+ * Get all expenses
  */
-export async function getExpenses(uid: string) {
+export async function getExpenses(
+  uid: string
+): Promise<Expense[]> {
   const ref = collection(
     db,
     "users",
@@ -53,4 +58,43 @@ export async function getExpenses(uid: string) {
     id: doc.id,
     ...doc.data(),
   })) as Expense[];
+}
+
+/**
+ * Update an expense
+ */
+export async function updateExpense(
+  uid: string,
+  expenseId: string,
+  expense: Omit<Expense, "id" | "createdAt">
+) {
+  const ref = doc(
+    db,
+    "users",
+    uid,
+    "expenses",
+    expenseId
+  );
+
+  await updateDoc(ref, {
+    ...expense,
+  });
+}
+
+/**
+ * Delete an expense
+ */
+export async function deleteExpense(
+  uid: string,
+  expenseId: string
+) {
+  const ref = doc(
+    db,
+    "users",
+    uid,
+    "expenses",
+    expenseId
+  );
+
+  await deleteDoc(ref);
 }

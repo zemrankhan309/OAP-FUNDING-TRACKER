@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import type { Expense } from "../../types/expense";
 
 interface Props {
@@ -10,15 +10,19 @@ interface Props {
   onSubmit: (
     expense: Omit<Expense, "id" | "createdAt">
   ) => Promise<void>;
+
+  editingExpense?: Expense | null;
+
+  onCancelEdit?: () => void;
 }
 
 export default function ExpenseForm({
   allocations,
   onSubmit,
+  editingExpense,
+  onCancelEdit,
 }: Props) {
-  const [saving, setSaving] = useState(false);
-
-  const [expense, setExpense] = useState({
+  const emptyExpense = {
     allocationId: "",
     category: "ABA Therapy",
     provider: "",
@@ -27,10 +31,31 @@ export default function ExpenseForm({
     startDate: "",
     endDate: "",
     notes: "",
-  });
+  };
+
+  const [saving, setSaving] = useState(false);
+
+  const [expense, setExpense] = useState<any>(emptyExpense);
+
+  useEffect(() => {
+    if (editingExpense) {
+      setExpense({
+        allocationId: editingExpense.allocationId,
+        category: editingExpense.category,
+        provider: editingExpense.provider,
+        description: editingExpense.description,
+        amount: editingExpense.amount,
+        startDate: editingExpense.startDate,
+        endDate: editingExpense.endDate,
+        notes: editingExpense.notes ?? "",
+      });
+    } else {
+      setExpense(emptyExpense);
+    }
+  }, [editingExpense]);
 
   function update(field: string, value: any) {
-    setExpense((prev) => ({
+    setExpense((prev: any) => ({
       ...prev,
       [field]: value,
     }));
@@ -70,16 +95,9 @@ export default function ExpenseForm({
         notes: expense.notes,
       });
 
-      setExpense({
-        allocationId: "",
-        category: "ABA Therapy",
-        provider: "",
-        description: "",
-        amount: "",
-        startDate: "",
-        endDate: "",
-        notes: "",
-      });
+      if (!editingExpense) {
+        setExpense(emptyExpense);
+      }
     } finally {
       setSaving(false);
     }
@@ -91,12 +109,15 @@ export default function ExpenseForm({
       className="rounded-xl bg-white p-8 shadow"
     >
       <h2 className="mb-8 text-3xl font-bold">
-        Add Expense
+        {editingExpense
+          ? "Edit Expense"
+          : "Add Expense"}
       </h2>
 
       <div className="grid gap-6">
 
         {/* Funding Allocation */}
+
         <div>
           <label className="mb-2 block font-medium">
             Funding Allocation
@@ -126,6 +147,7 @@ export default function ExpenseForm({
         </div>
 
         {/* Category */}
+
         <div>
           <label className="mb-2 block font-medium">
             Category
@@ -154,6 +176,7 @@ export default function ExpenseForm({
         </div>
 
         {/* Provider */}
+
         <div>
           <label className="mb-2 block font-medium">
             Provider
@@ -161,7 +184,6 @@ export default function ExpenseForm({
 
           <input
             type="text"
-            placeholder="Provider Name"
             value={expense.provider}
             onChange={(e) =>
               update("provider", e.target.value)
@@ -171,6 +193,7 @@ export default function ExpenseForm({
         </div>
 
         {/* Description */}
+
         <div>
           <label className="mb-2 block font-medium">
             Description
@@ -178,7 +201,6 @@ export default function ExpenseForm({
 
           <input
             type="text"
-            placeholder="Description"
             value={expense.description}
             onChange={(e) =>
               update("description", e.target.value)
@@ -188,12 +210,14 @@ export default function ExpenseForm({
         </div>
 
         {/* Amount */}
+
         <div>
           <label className="mb-2 block font-medium">
             Amount
           </label>
 
           <div className="relative">
+
             <span className="absolute left-4 top-1/2 -translate-y-1/2">
               $
             </span>
@@ -202,21 +226,22 @@ export default function ExpenseForm({
               type="number"
               min="0"
               step="0.01"
-              placeholder="0.00"
               value={expense.amount}
               onChange={(e) =>
                 update("amount", e.target.value)
               }
               className="w-full rounded-lg border py-3 pl-8 pr-3"
-              required
             />
+
           </div>
         </div>
 
         {/* Dates */}
+
         <div className="grid gap-6 md:grid-cols-2">
 
           <div>
+
             <label className="mb-2 block font-medium">
               Start Date
             </label>
@@ -228,11 +253,12 @@ export default function ExpenseForm({
                 update("startDate", e.target.value)
               }
               className="w-full rounded-lg border p-3"
-              required
             />
+
           </div>
 
           <div>
+
             <label className="mb-2 block font-medium">
               End Date
             </label>
@@ -244,14 +270,16 @@ export default function ExpenseForm({
                 update("endDate", e.target.value)
               }
               className="w-full rounded-lg border p-3"
-              required
             />
+
           </div>
 
         </div>
 
         {/* Notes */}
+
         <div>
+
           <label className="mb-2 block font-medium">
             Notes
           </label>
@@ -264,15 +292,36 @@ export default function ExpenseForm({
             }
             className="w-full rounded-lg border p-3"
           />
+
         </div>
 
-        <button
-          type="submit"
-          disabled={saving}
-          className="rounded-lg bg-blue-600 py-3 text-lg font-semibold text-white hover:bg-blue-700 disabled:opacity-50"
-        >
-          {saving ? "Saving..." : "💾 Save Expense"}
-        </button>
+        {/* Buttons */}
+
+        <div className="flex gap-4">
+
+          <button
+            type="submit"
+            disabled={saving}
+            className="flex-1 rounded-lg bg-blue-600 py-3 text-lg font-semibold text-white hover:bg-blue-700 disabled:opacity-50"
+          >
+            {saving
+              ? "Saving..."
+              : editingExpense
+              ? "💾 Update Expense"
+              : "💾 Save Expense"}
+          </button>
+
+          {editingExpense && (
+            <button
+              type="button"
+              onClick={onCancelEdit}
+              className="rounded-lg border border-gray-300 px-6 py-3 font-semibold hover:bg-gray-100"
+            >
+              Cancel
+            </button>
+          )}
+
+        </div>
 
       </div>
     </form>
