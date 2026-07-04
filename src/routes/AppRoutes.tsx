@@ -2,6 +2,7 @@ import { Routes, Route, Navigate } from "react-router-dom";
 
 import Login from "../pages/Login";
 import Dashboard from "../pages/Dashboard";
+import Children from "../pages/Children";
 import Funding from "../pages/Funding";
 import Expenses from "../pages/Expenses";
 import FinancialStatement from "../pages/FinancialStatement";
@@ -12,9 +13,12 @@ export default function AppRoutes() {
   return (
     <Routes>
       {/* Public Route */}
-      <Route path="/login" element={<Login />} />
+      <Route
+        path="/login"
+        element={<Login />}
+      />
 
-      {/* Protected Routes */}
+      {/* Dashboard */}
       <Route
         path="/dashboard"
         element={
@@ -24,6 +28,17 @@ export default function AppRoutes() {
         }
       />
 
+      {/* Children */}
+      <Route
+        path="/children"
+        element={
+          <ProtectedRoute>
+            <Children />
+          </ProtectedRoute>
+        }
+      />
+
+      {/* Funding */}
       <Route
         path="/funding"
         element={
@@ -33,6 +48,7 @@ export default function AppRoutes() {
         }
       />
 
+      {/* Expenses */}
       <Route
         path="/expenses"
         element={
@@ -42,6 +58,7 @@ export default function AppRoutes() {
         }
       />
 
+      {/* Financial Statement */}
       <Route
         path="/financial-statement"
         element={
@@ -51,16 +68,26 @@ export default function AppRoutes() {
         }
       />
 
-      {/* Default Route */}
+      {/* Default */}
       <Route
         path="/"
-        element={<Navigate to="/dashboard" replace />}
+        element={
+          <Navigate
+            to="/dashboard"
+            replace
+          />
+        }
       />
 
       {/* Catch All */}
       <Route
         path="*"
-        element={<Navigate to="/dashboard" replace />}
+        element={
+          <Navigate
+            to="/dashboard"
+            replace
+          />
+        }
       />
     </Routes>
   );

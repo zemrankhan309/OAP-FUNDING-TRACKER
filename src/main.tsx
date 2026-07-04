@@ -7,12 +7,15 @@ import App from "./App";
 import "./index.css";
 
 import { AuthProvider } from "./contexts/AuthContext";
+import { SelectedChildProvider } from "./contexts/SelectedChildContext";
 
 ReactDOM.createRoot(document.getElementById("root")!).render(
   <React.StrictMode>
     <BrowserRouter>
       <AuthProvider>
-        <App />
+        <SelectedChildProvider>
+          <App />
+        </SelectedChildProvider>
       </AuthProvider>
     </BrowserRouter>
   </React.StrictMode>

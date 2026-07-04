@@ -1,6 +1,7 @@
 import { NavLink } from "react-router-dom";
 import {
   LayoutDashboard,
+  Users,
   Wallet,
   Receipt,
   FileText,
@@ -16,6 +17,11 @@ const menuItems = [
     title: "Dashboard",
     path: "/dashboard",
     icon: LayoutDashboard,
+  },
+  {
+    title: "Children",
+    path: "/children",
+    icon: Users,
   },
   {
     title: "Funding",
@@ -54,7 +60,9 @@ export default function Sidebar() {
     <aside className="flex h-full w-64 flex-col border-r border-gray-200 bg-white">
 
       {/* Logo */}
+
       <div className="border-b border-gray-200 px-6 py-5">
+
         <h1 className="text-2xl font-bold text-blue-600">
           OAP Tracker
         </h1>
@@ -62,10 +70,13 @@ export default function Sidebar() {
         <p className="mt-1 text-sm text-gray-500">
           Funding Management
         </p>
+
       </div>
 
       {/* Navigation */}
+
       <nav className="flex-1 p-4">
+
         <ul className="space-y-2">
 
           {menuItems.map((item) => {
@@ -73,6 +84,7 @@ export default function Sidebar() {
 
             return (
               <li key={item.title}>
+
                 <NavLink
                   to={item.path}
                   className={({ isActive }) =>
@@ -83,31 +95,40 @@ export default function Sidebar() {
                     }`
                   }
                 >
+
                   <Icon size={20} />
 
                   <span className="font-medium">
                     {item.title}
                   </span>
+
                 </NavLink>
+
               </li>
             );
           })}
 
         </ul>
+
       </nav>
 
       {/* Logout */}
+
       <div className="border-t border-gray-200 p-4">
+
         <button
           onClick={handleLogout}
           className="flex w-full items-center gap-3 rounded-lg px-4 py-3 text-red-600 transition hover:bg-red-50"
         >
+
           <LogOut size={20} />
 
           <span className="font-medium">
             Logout
           </span>
+
         </button>
+
       </div>
 
     </aside>
