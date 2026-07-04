@@ -10,6 +10,8 @@ import AllocationCard from "../components/funding/AllocationCard";
 
 import { useAuth } from "../contexts/AuthContext";
 
+import type { Allocation } from "../types/allocation";
+
 import {
   createAllocation,
   updateAllocation,
@@ -23,11 +25,14 @@ import { getFundingSummary } from "../services/fundingManagementService";
 export default function Funding() {
   const { user } = useAuth();
 
-  const [allocations, setAllocations] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
 
+  const [allocations, setAllocations] = useState<
+    Allocation[]
+  >([]);
+
   const [editingAllocation, setEditingAllocation] =
-    useState<any>(null);
+    useState<Allocation | null>(null);
 
   async function loadAllocations() {
     if (!user) return;
@@ -36,6 +41,7 @@ export default function Funding() {
 
     try {
       const data = await getFundingSummary(user.uid);
+
       setAllocations(data);
     } catch (error) {
       console.error(error);
@@ -71,7 +77,7 @@ export default function Funding() {
           amount: Number(data.amount),
         });
 
-        alert("Funding allocation created successfully.");
+        alert("Funding allocation created.");
       }
 
       setEditingAllocation(null);
@@ -79,8 +85,24 @@ export default function Funding() {
       await loadAllocations();
     } catch (error) {
       console.error(error);
-      alert("Unable to save funding allocation.");
+
+      alert("Unable to save funding.");
     }
+  }
+
+  function handleEdit(
+    allocation: Allocation
+  ) {
+    setEditingAllocation(allocation);
+
+    window.scrollTo({
+      top: 0,
+      behavior: "smooth",
+    });
+  }
+
+  function cancelEdit() {
+    setEditingAllocation(null);
   }
 
   async function handleMakeActive(id: string) {
@@ -90,10 +112,9 @@ export default function Funding() {
       await setActiveAllocation(user.uid, id);
 
       await loadAllocations();
-
-      alert("Funding allocation is now active.");
     } catch (error) {
       console.error(error);
+
       alert("Unable to activate funding.");
     }
   }
@@ -112,10 +133,9 @@ export default function Funding() {
       await closeAllocation(user.uid, id);
 
       await loadAllocations();
-
-      alert("Funding closed.");
     } catch (error) {
       console.error(error);
+
       alert("Unable to close funding.");
     }
   }
@@ -134,39 +154,77 @@ export default function Funding() {
       await archiveAllocation(user.uid, id);
 
       await loadAllocations();
-
-      alert("Funding archived.");
     } catch (error) {
       console.error(error);
+
       alert("Unable to archive funding.");
     }
   }
 
-  function handleEdit(allocation: any) {
-    setEditingAllocation(allocation);
+  // Organize allocations by status
+  const active = allocations.filter(
+    (a) => a.status === "active"
+  );
 
-    window.scrollTo({
-      top: 0,
-      behavior: "smooth",
-    });
-  }
+  const inactive = allocations.filter(
+    (a) => a.status === "inactive"
+  );
 
-  function cancelEdit() {
-    setEditingAllocation(null);
+  const closed = allocations.filter(
+    (a) => a.status === "closed"
+  );
+
+  const archived = allocations.filter(
+    (a) => a.status === "archived"
+  );
+
+  function renderSection(
+    title: string,
+    items: Allocation[]
+  ) {
+    if (items.length === 0) return null;
+
+    return (
+      <section className="space-y-4">
+
+        <h2 className="text-2xl font-bold">
+          {title}
+        </h2>
+
+        <div className="grid gap-6 md:grid-cols-2 xl:grid-cols-3">
+
+          {items.map((allocation) => (
+            <AllocationCard
+              key={allocation.id}
+              allocation={allocation}
+              onEdit={handleEdit}
+              onMakeActive={handleMakeActive}
+              onClose={handleClose}
+              onArchive={handleArchive}
+            />
+          ))}
+
+        </div>
+
+      </section>
+    );
   }
 
   return (
     <DashboardLayout>
-      <div className="space-y-8">
+
+      <div className="space-y-10">
 
         <div>
-          <h1 className="text-3xl font-bold">
+
+          <h1 className="text-4xl font-bold">
             Funding Management
           </h1>
 
           <p className="mt-2 text-gray-500">
-            Manage all of your OAP funding allocations.
+            Manage your OAP funding allocations.
           </p>
+
         </div>
 
         <FundingForm
@@ -175,62 +233,40 @@ export default function Funding() {
           onCancelEdit={cancelEdit}
         />
 
-        <section>
+        {loading ? (
 
-          <div className="mb-6 flex items-center justify-between">
-
-            <h2 className="text-2xl font-semibold">
-              Your Funding Allocations
-            </h2>
-
-            <span className="rounded-full bg-blue-100 px-4 py-2 text-sm font-medium text-blue-700">
-              {allocations.length} Allocation
-              {allocations.length !== 1
-                ? "s"
-                : ""}
-            </span>
-
+          <div className="rounded-xl bg-white p-10 shadow">
+            Loading...
           </div>
 
-          {loading ? (
-            <div className="rounded-xl bg-white p-10 text-center shadow">
-              Loading funding allocations...
-            </div>
-          ) : allocations.length === 0 ? (
-            <div className="rounded-xl bg-white p-10 text-center shadow">
+        ) : (
 
-              <h3 className="text-xl font-semibold">
-                No Funding Allocations
-              </h3>
+          <>
+            {renderSection(
+              "🟢 Active Funding",
+              active
+            )}
 
-              <p className="mt-2 text-gray-500">
-                Create your first funding allocation
-                to get started.
-              </p>
+            {renderSection(
+              "⚪ Inactive Funding",
+              inactive
+            )}
 
-            </div>
-          ) : (
-            <div className="grid gap-6 md:grid-cols-2 xl:grid-cols-3">
+            {renderSection(
+              "🔵 Closed Funding",
+              closed
+            )}
 
-              {allocations.map((allocation) => (
-                <AllocationCard
-                  key={allocation.id}
-                  allocation={allocation}
-                  onMakeActive={
-                    handleMakeActive
-                  }
-                  onClose={handleClose}
-                  onArchive={handleArchive}
-                  onEdit={handleEdit}
-                />
-              ))}
+            {renderSection(
+              "🗄 Archived Funding",
+              archived
+            )}
+          </>
 
-            </div>
-          )}
-
-        </section>
+        )}
 
       </div>
+
     </DashboardLayout>
   );
 }

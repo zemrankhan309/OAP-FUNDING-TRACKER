@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import type { Allocation } from "../../types/allocation";
 
 export interface FundingFormData {
   name: string;
@@ -17,29 +18,33 @@ interface FundingFormProps {
     endDate: string;
   }) => Promise<void>;
 
-  editingAllocation?: any;
+  editingAllocation: Allocation | null;
 
-  onCancelEdit?: () => void;
+  onCancelEdit: () => void;
 }
+
+const emptyForm: FundingFormData = {
+  name: "",
+  program: "Ontario Autism Program",
+  amount: "",
+  startDate: "",
+  endDate: "",
+};
 
 export default function FundingForm({
   onSubmit,
   editingAllocation,
   onCancelEdit,
 }: FundingFormProps) {
-  const emptyForm: FundingFormData = {
-    name: "",
-    program: "Ontario Autism Program",
-    amount: "",
-    startDate: "",
-    endDate: "",
-  };
-
   const [form, setForm] =
     useState<FundingFormData>(emptyForm);
 
   const [saving, setSaving] = useState(false);
 
+  /**
+   * Whenever the selected allocation changes,
+   * populate the form automatically.
+   */
   useEffect(() => {
     if (editingAllocation) {
       setForm({
@@ -58,8 +63,8 @@ export default function FundingForm({
     field: K,
     value: FundingFormData[K]
   ) {
-    setForm((prev) => ({
-      ...prev,
+    setForm((previous) => ({
+      ...previous,
       [field]: value,
     }));
   }
@@ -74,17 +79,20 @@ export default function FundingForm({
       return;
     }
 
-    setSaving(true);
+    try {
+      setSaving(true);
 
-    await onSubmit({
-      ...form,
-      amount: Number(form.amount),
-    });
+      await onSubmit({
+        ...form,
+        amount: Number(form.amount),
+      });
 
-    setSaving(false);
-
-    if (!editingAllocation) {
-      setForm(emptyForm);
+      // Only clear the form after creating
+      if (!editingAllocation) {
+        setForm(emptyForm);
+      }
+    } finally {
+      setSaving(false);
     }
   }
 
@@ -93,11 +101,31 @@ export default function FundingForm({
       onSubmit={handleSubmit}
       className="rounded-xl bg-white p-8 shadow"
     >
-      <h2 className="mb-8 text-2xl font-bold">
-        {editingAllocation
-          ? "Edit Funding Allocation"
-          : "Add Funding Allocation"}
-      </h2>
+      <div className="mb-8 flex items-center justify-between">
+
+        <div>
+
+          <h2 className="text-2xl font-bold">
+            {editingAllocation
+              ? "Edit Funding Allocation"
+              : "Add Funding Allocation"}
+          </h2>
+
+          <p className="mt-1 text-sm text-gray-500">
+            {editingAllocation
+              ? "Update the selected funding allocation."
+              : "Create a new funding allocation."}
+          </p>
+
+        </div>
+
+        {editingAllocation && (
+          <span className="rounded-full bg-blue-100 px-4 py-2 text-sm font-semibold text-blue-700">
+            Editing
+          </span>
+        )}
+
+      </div>
 
       <div className="space-y-6">
 
@@ -105,7 +133,7 @@ export default function FundingForm({
 
         <div>
 
-          <label className="mb-2 block font-medium text-gray-700">
+          <label className="mb-2 block font-medium">
             Funding Name
           </label>
 
@@ -126,7 +154,7 @@ export default function FundingForm({
 
         <div>
 
-          <label className="mb-2 block font-medium text-gray-700">
+          <label className="mb-2 block font-medium">
             Program
           </label>
 
@@ -139,18 +167,18 @@ export default function FundingForm({
           >
             <option>Ontario Autism Program</option>
             <option>Jordan's Principle</option>
-            <option>Private Funding</option>
             <option>Insurance</option>
+            <option>Private Funding</option>
             <option>Other</option>
           </select>
 
         </div>
 
-        {/* Amount */}
+        {/* Funding Amount */}
 
         <div>
 
-          <label className="mb-2 block font-medium text-gray-700">
+          <label className="mb-2 block font-medium">
             Funding Amount
           </label>
 
@@ -162,9 +190,8 @@ export default function FundingForm({
 
             <input
               type="number"
-              min="0"
+              min={0}
               step="0.01"
-              placeholder="60000"
               value={form.amount}
               onChange={(e) =>
                 updateField(
@@ -188,7 +215,7 @@ export default function FundingForm({
 
           <div>
 
-            <label className="mb-2 block font-medium text-gray-700">
+            <label className="mb-2 block font-medium">
               Start Date
             </label>
 
@@ -206,7 +233,7 @@ export default function FundingForm({
 
           <div>
 
-            <label className="mb-2 block font-medium text-gray-700">
+            <label className="mb-2 block font-medium">
               End Date
             </label>
 
@@ -231,13 +258,13 @@ export default function FundingForm({
           <button
             type="submit"
             disabled={saving}
-            className="flex-1 rounded-lg bg-blue-600 py-3 text-lg font-semibold text-white transition hover:bg-blue-700"
+            className="flex-1 rounded-lg bg-blue-600 py-3 font-semibold text-white transition hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-50"
           >
             {saving
               ? "Saving..."
               : editingAllocation
               ? "💾 Update Funding"
-              : "💾 Save Funding Allocation"}
+              : "💾 Save Funding"}
           </button>
 
           {editingAllocation && (
@@ -253,7 +280,6 @@ export default function FundingForm({
         </div>
 
       </div>
-
     </form>
   );
 }
