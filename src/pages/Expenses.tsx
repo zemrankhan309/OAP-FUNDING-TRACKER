@@ -1,155 +1,41 @@
-import { useEffect, useState } from "react";
-
 import DashboardLayout from "../layouts/DashboardLayout";
 
 import ExpenseForm from "../components/expenses/ExpenseForm";
 import ExpenseCard from "../components/expenses/ExpenseCard";
 import EditExpenseModal from "../components/expenses/EditExpenseModal";
 
-import { useAuth } from "../contexts/AuthContext";
 import { useSelectedChild } from "../contexts/SelectedChildContext";
 
-import {
-  createExpense,
-  updateExpense,
-  deleteExpense,
-  getExpenses,
-} from "../services/expenseService";
-
-import { getAllocations } from "../services/allocationService";
-
-import type { Expense } from "../types/expense";
-import type { Allocation } from "../types/allocation";
+import { useExpenses } from "../hooks/useExpenses";
 
 export default function Expenses() {
-  const { user } = useAuth();
   const { selectedChild } = useSelectedChild();
 
-  const [expenses, setExpenses] = useState<Expense[]>([]);
-  const [allocations, setAllocations] = useState<Allocation[]>([]);
-  const [loading, setLoading] = useState(true);
+  const {
+    loading,
 
-  const [editingExpense, setEditingExpense] =
-    useState<Expense | null>(null);
+    expenses,
 
-  async function loadData() {
-    if (!user || !selectedChild) {
-      setExpenses([]);
-      setAllocations([]);
-      setLoading(false);
-      return;
-    }
+    allocations,
 
-    setLoading(true);
+    editingExpense,
 
-    try {
-      const [expenseData, allocationData] =
-        await Promise.all([
-          getExpenses(user.uid),
-          getAllocations(user.uid),
-        ]);
+    saveExpense,
 
-      // Only this child's allocations
-      const childAllocations = allocationData.filter(
-        (allocation: any) =>
-          allocation.childId === selectedChild.id
-      );
+    updateExistingExpense,
 
-      // IDs for filtering expenses
-      const allocationIds = childAllocations.map(
-        (allocation) => allocation.id
-      );
+    deleteExistingExpense,
 
-      // Only expenses for this child
-      const childExpenses = expenseData.filter(
-        (expense: any) =>
-          allocationIds.includes(expense.allocationId)
-      );
+    edit,
 
-      setAllocations(childAllocations);
-      setExpenses(childExpenses);
-    } catch (error) {
-      console.error(error);
-      alert("Unable to load expenses.");
-    } finally {
-      setLoading(false);
-    }
-  }
-
-  useEffect(() => {
-    loadData();
-  }, [user, selectedChild]);
-
-  async function handleCreateExpense(
-    expense: Omit<Expense, "id" | "createdAt">
-  ) {
-    if (!user) return;
-
-    try {
-      await createExpense(user.uid, expense);
-
-      await loadData();
-
-      alert("Expense created successfully.");
-    } catch (error) {
-      console.error(error);
-      alert("Unable to create expense.");
-    }
-  }
-
-  async function handleUpdateExpense(
-    expense: Omit<Expense, "id" | "createdAt">
-  ) {
-    if (!user || !editingExpense) return;
-
-    try {
-      await updateExpense(
-        user.uid,
-        editingExpense.id,
-        expense
-      );
-
-      setEditingExpense(null);
-
-      await loadData();
-
-      alert("Expense updated successfully.");
-    } catch (error) {
-      console.error(error);
-      alert("Unable to update expense.");
-    }
-  }
-
-  async function handleDeleteExpense(id: string) {
-    if (!user) return;
-
-    if (
-      !window.confirm(
-        "Delete this expense?\n\nThis action cannot be undone."
-      )
-    ) {
-      return;
-    }
-
-    try {
-      await deleteExpense(user.uid, id);
-
-      if (editingExpense?.id === id) {
-        setEditingExpense(null);
-      }
-
-      await loadData();
-
-      alert("Expense deleted.");
-    } catch (error) {
-      console.error(error);
-      alert("Unable to delete expense.");
-    }
-  }
+    cancelEdit,
+  } = useExpenses();
 
   return (
     <DashboardLayout>
       <div className="space-y-8">
+
+        {/* Header */}
 
         <div>
 
@@ -168,18 +54,24 @@ export default function Expenses() {
 
         </div>
 
+        {/* Add Expense */}
+
         <ExpenseForm
           allocations={allocations}
-          onSubmit={handleCreateExpense}
+          onSubmit={saveExpense}
         />
+
+        {/* Edit Expense */}
 
         <EditExpenseModal
           isOpen={editingExpense !== null}
           expense={editingExpense}
           allocations={allocations}
-          onSave={handleUpdateExpense}
-          onClose={() => setEditingExpense(null)}
+          onSave={updateExistingExpense}
+          onClose={cancelEdit}
         />
+
+        {/* Expense List */}
 
         <div>
 
@@ -225,8 +117,8 @@ export default function Expenses() {
                 <ExpenseCard
                   key={expense.id}
                   expense={expense}
-                  onEdit={setEditingExpense}
-                  onDelete={handleDeleteExpense}
+                  onEdit={edit}
+                  onDelete={deleteExistingExpense}
                 />
 
               ))}
