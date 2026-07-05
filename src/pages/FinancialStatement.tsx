@@ -1,42 +1,23 @@
-import { useEffect, useState } from "react";
-
 import DashboardLayout from "../layouts/DashboardLayout";
-import { useAuth } from "../contexts/AuthContext";
 
-import { getFinancialStatement } from "../services/financialStatementService";
+import { useSelectedChild } from "../contexts/SelectedChildContext";
+
+import { useFinancialStatement } from "../hooks/useFinancialStatement";
 
 export default function FinancialStatement() {
-  const { user } = useAuth();
+  const { selectedChild } = useSelectedChild();
 
-  const [statement, setStatement] = useState<any>(null);
-  const [selectedAllocation, setSelectedAllocation] =
-    useState("");
+  const {
+    loading,
+    statement,
+  } = useFinancialStatement();
 
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    async function loadData() {
-      if (!user) return;
-
-      setLoading(true);
-
-      const data = await getFinancialStatement(
-        user.uid,
-        selectedAllocation || undefined
-      );
-
-      setStatement(data);
-
-      setLoading(false);
-    }
-
-    loadData();
-  }, [user, selectedAllocation]);
-
-  if (loading || !statement) {
+  if (loading) {
     return (
       <DashboardLayout>
-        <p>Loading...</p>
+        <div className="rounded-xl bg-white p-8 shadow">
+          Loading Financial Statement...
+        </div>
       </DashboardLayout>
     );
   }
@@ -45,47 +26,22 @@ export default function FinancialStatement() {
     <DashboardLayout>
       <div className="space-y-8">
 
-        {/* Page Header */}
+        {/* Header */}
 
         <div>
+
           <h1 className="text-4xl font-bold">
-            Funding Statement
+            Financial Statement
           </h1>
 
           <p className="mt-2 text-gray-500">
-            Complete financial summary of your OAP funding.
+            Funding summary for{" "}
+            <span className="font-semibold text-blue-600">
+              {selectedChild
+                ? `${selectedChild.firstName} ${selectedChild.lastName}`
+                : "No Child Selected"}
+            </span>
           </p>
-        </div>
-
-        {/* Allocation Selector */}
-
-        <div className="rounded-xl bg-white p-6 shadow">
-
-          <label className="mb-2 block font-semibold">
-            Funding Allocation
-          </label>
-
-          <select
-            value={selectedAllocation}
-            onChange={(e) =>
-              setSelectedAllocation(e.target.value)
-            }
-            className="w-full rounded-lg border p-3"
-          >
-            <option value="">
-              All Funding Allocations
-            </option>
-
-            {statement.allocations.map((allocation: any) => (
-              <option
-                key={allocation.id}
-                value={allocation.id}
-              >
-                {allocation.name}
-              </option>
-            ))}
-
-          </select>
 
         </div>
 
@@ -94,100 +50,62 @@ export default function FinancialStatement() {
         <div className="grid gap-6 md:grid-cols-4">
 
           <div className="rounded-xl bg-white p-6 shadow">
-            <p className="text-gray-500">
-              Funding Received
-            </p>
+            <h3 className="text-gray-500">
+              Total Funding
+            </h3>
 
-            <h2 className="mt-2 text-3xl font-bold text-blue-600">
-              {statement.totalFunding.toLocaleString("en-CA", {
-                style: "currency",
-                currency: "CAD",
-              })}
-            </h2>
+            <p className="mt-2 text-3xl font-bold">
+              $
+              {statement.totalFunding.toLocaleString()}
+            </p>
           </div>
 
           <div className="rounded-xl bg-white p-6 shadow">
-            <p className="text-gray-500">
+            <h3 className="text-gray-500">
               Total Spent
-            </p>
+            </h3>
 
-            <h2 className="mt-2 text-3xl font-bold text-red-600">
-              {statement.totalSpent.toLocaleString("en-CA", {
-                style: "currency",
-                currency: "CAD",
-              })}
-            </h2>
+            <p className="mt-2 text-3xl font-bold text-red-500">
+              $
+              {statement.totalSpent.toLocaleString()}
+            </p>
           </div>
 
           <div className="rounded-xl bg-white p-6 shadow">
-            <p className="text-gray-500">
-              Remaining Balance
-            </p>
+            <h3 className="text-gray-500">
+              Remaining
+            </h3>
 
-            <h2 className="mt-2 text-3xl font-bold text-green-600">
-              {statement.remaining.toLocaleString("en-CA", {
-                style: "currency",
-                currency: "CAD",
-              })}
-            </h2>
+            <p className="mt-2 text-3xl font-bold text-green-600">
+              $
+              {statement.remaining.toLocaleString()}
+            </p>
           </div>
 
           <div className="rounded-xl bg-white p-6 shadow">
-            <p className="text-gray-500">
-              Funding Used
-            </p>
+            <h3 className="text-gray-500">
+              Used
+            </h3>
 
-            <h2 className="mt-2 text-3xl font-bold">
+            <p className="mt-2 text-3xl font-bold text-blue-600">
               {statement.percentUsed.toFixed(1)}%
-            </h2>
+            </p>
           </div>
 
         </div>
 
-        {/* Progress */}
+        {/* Category Breakdown */}
 
         <div className="rounded-xl bg-white p-6 shadow">
 
-          <div className="mb-4 flex justify-between">
-
-            <span className="font-semibold">
-              Funding Usage
-            </span>
-
-            <span>
-              {statement.percentUsed.toFixed(1)}%
-            </span>
-
-          </div>
-
-          <div className="h-4 rounded-full bg-gray-200">
-
-            <div
-              className="h-4 rounded-full rounded-full bg-blue-600"
-              style={{
-                width: `${Math.min(
-                  statement.percentUsed,
-                  100
-                )}%`,
-              }}
-            />
-
-          </div>
-
-        </div>
-
-        {/* Spending by Category */}
-
-        <div className="rounded-xl bg-white p-6 shadow">
-
-          <h2 className="mb-4 text-2xl font-bold">
+          <h2 className="mb-6 text-2xl font-bold">
             Spending by Category
           </h2>
 
           {Object.keys(statement.categoryTotals).length === 0 ? (
 
             <p className="text-gray-500">
-              No expenses found.
+              No expenses recorded.
             </p>
 
           ) : (
@@ -195,7 +113,8 @@ export default function FinancialStatement() {
             <div className="space-y-3">
 
               {Object.entries(statement.categoryTotals).map(
-                ([category, amount]) => (
+                ([category, total]) => (
+
                   <div
                     key={category}
                     className="flex justify-between border-b pb-2"
@@ -203,16 +122,11 @@ export default function FinancialStatement() {
                     <span>{category}</span>
 
                     <span className="font-semibold">
-                      {Number(amount).toLocaleString(
-                        "en-CA",
-                        {
-                          style: "currency",
-                          currency: "CAD",
-                        }
-                      )}
+                      ${Number(total).toLocaleString()}
                     </span>
 
                   </div>
+
                 )
               )}
 
@@ -222,108 +136,57 @@ export default function FinancialStatement() {
 
         </div>
 
-        {/* Transaction History */}
+        {/* Transactions */}
 
-        <div className="overflow-x-auto rounded-xl bg-white p-6 shadow">
+        <div className="rounded-xl bg-white p-6 shadow">
 
-          <h2 className="mb-5 text-2xl font-bold">
-            Transaction History
+          <h2 className="mb-6 text-2xl font-bold">
+            Transactions
           </h2>
 
-          {statement.transactions.length === 0 ? (
+          {statement.expenses.length === 0 ? (
 
             <p className="text-gray-500">
-              No transactions found.
+              No transactions.
             </p>
 
           ) : (
 
-            <table className="w-full">
+            <div className="space-y-4">
 
-              <thead>
+              {statement.expenses.map((expense: any) => (
 
-                <tr className="border-b text-left">
+                <div
+                  key={expense.id}
+                  className="flex items-center justify-between border-b pb-3"
+                >
 
-                  <th className="pb-3">
-                    Service Period
-                  </th>
+                  <div>
 
-                  <th>Category</th>
+                    <div className="font-semibold">
+                      {expense.category}
+                    </div>
 
-                  <th>Provider</th>
+                    <div className="text-sm text-gray-500">
+                      {expense.provider}
+                    </div>
 
-                  <th>Description</th>
+                    <div className="text-sm text-gray-400">
+                      {expense.startDate} - {expense.endDate}
+                    </div>
 
-                  <th className="text-right">
-                    Amount
-                  </th>
+                  </div>
 
-                </tr>
+                  <div className="font-bold text-red-500">
+                    -$
+                    {Number(expense.amount).toLocaleString()}
+                  </div>
 
-              </thead>
+                </div>
 
-              <tbody>
+              ))}
 
-                {statement.transactions.map(
-                  (expense: any) => (
-
-                    <tr
-                      key={expense.id}
-                      className="border-b"
-                    >
-
-                      <td className="py-3">
-                        {expense.startDate} → {expense.endDate}
-                      </td>
-
-                      <td>{expense.category}</td>
-
-                      <td>{expense.provider}</td>
-
-                      <td>{expense.description}</td>
-
-                      <td className="text-right font-semibold">
-                        {Number(
-                          expense.amount
-                        ).toLocaleString("en-CA", {
-                          style: "currency",
-                          currency: "CAD",
-                        })}
-                      </td>
-
-                    </tr>
-
-                  )
-                )}
-
-              </tbody>
-
-              <tfoot>
-
-                <tr className="border-t font-bold">
-
-                  <td
-                    colSpan={4}
-                    className="pt-4"
-                  >
-                    Total Expenses
-                  </td>
-
-                  <td className="pt-4 text-right">
-                    {statement.totalSpent.toLocaleString(
-                      "en-CA",
-                      {
-                        style: "currency",
-                        currency: "CAD",
-                      }
-                    )}
-                  </td>
-
-                </tr>
-
-              </tfoot>
-
-            </table>
+            </div>
 
           )}
 
