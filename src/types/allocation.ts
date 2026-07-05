@@ -7,6 +7,11 @@ export type AllocationStatus =
 export interface Allocation {
   id: string;
 
+  /**
+   * Child this funding belongs to
+   */
+  childId: string;
+
   name: string;
 
   program: string;

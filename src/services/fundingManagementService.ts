@@ -4,14 +4,23 @@ import { getAllocations } from "./allocationService";
 import { getExpenses } from "./expenseService";
 
 export async function getFundingSummary(
-  uid: string
+  uid: string,
+  childId?: string
 ): Promise<Allocation[]> {
   const [allocations, expenses] = await Promise.all([
     getAllocations(uid),
     getExpenses(uid),
   ]);
 
-  return allocations.map((allocation) => {
+  // Only keep funding for the selected child (if provided)
+  const filteredAllocations = childId
+    ? allocations.filter(
+        (allocation: any) =>
+          allocation.childId === childId
+      )
+    : allocations;
+
+  return filteredAllocations.map((allocation: any) => {
     const allocationExpenses = expenses.filter(
       (expense: any) =>
         expense.allocationId === allocation.id
@@ -27,7 +36,7 @@ export async function getFundingSummary(
       Number(allocation.amount) - spent;
 
     const percentUsed =
-      allocation.amount === 0
+      Number(allocation.amount) === 0
         ? 0
         : (spent / Number(allocation.amount)) * 100;
 

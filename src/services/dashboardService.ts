@@ -1,19 +1,29 @@
 import { getAllocations } from "./allocationService";
 import { getExpenses } from "./expenseService";
 
-export async function getDashboardData(uid: string) {
+export async function getDashboardData(
+  uid: string,
+  childId?: string
+) {
   const allocations = await getAllocations(uid);
   const expenses = await getExpenses(uid);
 
-  // Find the active funding allocation
-  const activeAllocation = allocations.find(
+  // Only allocations for selected child
+  const childAllocations = childId
+    ? allocations.filter(
+        (allocation: any) =>
+          allocation.childId === childId
+      )
+    : allocations;
+
+  // Active allocation for selected child
+  const activeAllocation = childAllocations.find(
     (allocation: any) => allocation.active === true
   );
 
-  // No active allocation
   if (!activeAllocation) {
     return {
-      allocations,
+      allocations: childAllocations,
       expenses: [],
       totalFunding: 0,
       totalSpent: 0,
@@ -22,7 +32,6 @@ export async function getDashboardData(uid: string) {
     };
   }
 
-  // Only expenses for the active allocation
   const activeExpenses = expenses.filter(
     (expense: any) =>
       expense.allocationId === activeAllocation.id
@@ -44,7 +53,7 @@ export async function getDashboardData(uid: string) {
       : (totalSpent / totalFunding) * 100;
 
   return {
-    allocations,
+    allocations: childAllocations,
     expenses: activeExpenses,
     totalFunding,
     totalSpent,

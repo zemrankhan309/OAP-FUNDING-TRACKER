@@ -23,25 +23,51 @@ export default function ChildSelector() {
 
   useEffect(() => {
     async function loadChildren() {
-      if (!user) return;
+      console.log("========== Child Selector ==========");
 
-      const data = await getChildren(user.uid);
-
-      setChildren(data);
-
-      // Automatically select the first active child
-      if (
-        !selectedChild &&
-        data.length > 0
-      ) {
-        const firstActive =
-          data.find(
-            (child) =>
-              child.status === "active"
-          ) ?? data[0];
-
-        setSelectedChild(firstActive);
+      if (!user) {
+        console.log("❌ User is NULL");
+        return;
       }
+
+      console.log("✅ User:", user);
+      console.log("UID:", user.uid);
+
+      try {
+        const data = await getChildren(user.uid);
+
+        console.log(
+          "Children returned from Firestore:",
+          data
+        );
+
+        setChildren(data);
+
+        if (
+          !selectedChild &&
+          data.length > 0
+        ) {
+          const firstActive =
+            data.find(
+              (child) =>
+                child.status === "active"
+            ) ?? data[0];
+
+          console.log(
+            "Selecting child:",
+            firstActive
+          );
+
+          setSelectedChild(firstActive);
+        }
+      } catch (error) {
+        console.error(
+          "Error loading children:",
+          error
+        );
+      }
+
+      console.log("==============================");
     }
 
     loadChildren();
@@ -63,6 +89,11 @@ export default function ChildSelector() {
           );
 
           if (child) {
+            console.log(
+              "Selected:",
+              child
+            );
+
             setSelectedChild(child);
           }
         }}

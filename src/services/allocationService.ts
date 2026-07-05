@@ -7,29 +7,30 @@ import {
   query,
   serverTimestamp,
   updateDoc,
-  deleteDoc,
 } from "firebase/firestore";
 
 import { db } from "../firebase/config";
 
-import type { Allocation } from "../types/allocation";
+export interface Allocation {
+  childId: string;
+
+  name: string;
+
+  program: string;
+
+  amount: number;
+
+  startDate: string;
+
+  endDate: string;
+}
 
 /**
- * Create a new funding allocation.
- * The first allocation created becomes active automatically.
+ * Create Funding Allocation
  */
 export async function createAllocation(
   uid: string,
-  allocation: Omit<
-    Allocation,
-    | "id"
-    | "active"
-    | "status"
-    | "spent"
-    | "remaining"
-    | "expenseCount"
-    | "percentUsed"
-  >
+  allocation: Allocation
 ) {
   const allocationRef = collection(
     db,
@@ -38,11 +39,17 @@ export async function createAllocation(
     "allocations"
   );
 
-  const snapshot = await getDocs(allocationRef);
-
-  const hasActiveAllocation = snapshot.docs.some(
-    (doc) => doc.data().active === true
+  const snapshot = await getDocs(
+    allocationRef
   );
+
+  const hasActiveAllocation =
+    snapshot.docs.some(
+      (doc) =>
+        doc.data().active === true &&
+        doc.data().childId ===
+          allocation.childId
+    );
 
   await addDoc(allocationRef, {
     ...allocation,
@@ -58,11 +65,11 @@ export async function createAllocation(
 }
 
 /**
- * Get all funding allocations.
+ * Get All Funding Allocations
  */
 export async function getAllocations(
   uid: string
-): Promise<Allocation[]> {
+) {
   const allocationRef = collection(
     db,
     "users",
@@ -79,27 +86,17 @@ export async function getAllocations(
 
   return snapshot.docs.map((doc) => ({
     id: doc.id,
-
-    ...(doc.data() as Omit<
-      Allocation,
-      "id"
-    >),
+    ...doc.data(),
   }));
 }
 
 /**
- * Update an allocation.
+ * Update Allocation
  */
 export async function updateAllocation(
   uid: string,
   allocationId: string,
-  allocation: {
-    name: string;
-    program: string;
-    amount: number;
-    startDate: string;
-    endDate: string;
-  }
+  allocation: Partial<Allocation>
 ) {
   await updateDoc(
     doc(
@@ -114,20 +111,43 @@ export async function updateAllocation(
 }
 
 /**
- * Activate one funding allocation.
- * Automatically deactivates all others.
+ * Set Active Allocation
+ *
+ * Only within the SAME child.
  */
 export async function setActiveAllocation(
   uid: string,
   allocationId: string
 ) {
   const snapshot = await getDocs(
-    collection(db, "users", uid, "allocations")
+    collection(
+      db,
+      "users",
+      uid,
+      "allocations"
+    )
   );
 
+  const current =
+    snapshot.docs.find(
+      (d) => d.id === allocationId
+    );
+
+  if (!current) return;
+
+  const currentChildId =
+    current.data().childId;
+
   for (const allocation of snapshot.docs) {
+    if (
+      allocation.data().childId !==
+      currentChildId
+    )
+      continue;
+
     await updateDoc(allocation.ref, {
-      active: allocation.id === allocationId,
+      active:
+        allocation.id === allocationId,
 
       status:
         allocation.id === allocationId
@@ -138,7 +158,7 @@ export async function setActiveAllocation(
 }
 
 /**
- * Close funding.
+ * Close Allocation
  */
 export async function closeAllocation(
   uid: string,
@@ -154,13 +174,14 @@ export async function closeAllocation(
     ),
     {
       active: false,
+
       status: "closed",
     }
   );
 }
 
 /**
- * Archive funding.
+ * Archive Allocation
  */
 export async function archiveAllocation(
   uid: string,
@@ -176,25 +197,8 @@ export async function archiveAllocation(
     ),
     {
       active: false,
+
       status: "archived",
     }
-  );
-}
-
-/**
- * Permanently delete funding.
- */
-export async function deleteAllocation(
-  uid: string,
-  allocationId: string
-) {
-  await deleteDoc(
-    doc(
-      db,
-      "users",
-      uid,
-      "allocations",
-      allocationId
-    )
   );
 }

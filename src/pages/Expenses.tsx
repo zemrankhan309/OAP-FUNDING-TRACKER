@@ -7,6 +7,7 @@ import ExpenseCard from "../components/expenses/ExpenseCard";
 import EditExpenseModal from "../components/expenses/EditExpenseModal";
 
 import { useAuth } from "../contexts/AuthContext";
+import { useSelectedChild } from "../contexts/SelectedChildContext";
 
 import {
   createExpense,
@@ -22,6 +23,7 @@ import type { Allocation } from "../types/allocation";
 
 export default function Expenses() {
   const { user } = useAuth();
+  const { selectedChild } = useSelectedChild();
 
   const [expenses, setExpenses] = useState<Expense[]>([]);
   const [allocations, setAllocations] = useState<Allocation[]>([]);
@@ -31,7 +33,12 @@ export default function Expenses() {
     useState<Expense | null>(null);
 
   async function loadData() {
-    if (!user) return;
+    if (!user || !selectedChild) {
+      setExpenses([]);
+      setAllocations([]);
+      setLoading(false);
+      return;
+    }
 
     setLoading(true);
 
@@ -42,8 +49,25 @@ export default function Expenses() {
           getAllocations(user.uid),
         ]);
 
-      setExpenses(expenseData);
-      setAllocations(allocationData);
+      // Only this child's allocations
+      const childAllocations = allocationData.filter(
+        (allocation: any) =>
+          allocation.childId === selectedChild.id
+      );
+
+      // IDs for filtering expenses
+      const allocationIds = childAllocations.map(
+        (allocation) => allocation.id
+      );
+
+      // Only expenses for this child
+      const childExpenses = expenseData.filter(
+        (expense: any) =>
+          allocationIds.includes(expense.allocationId)
+      );
+
+      setAllocations(childAllocations);
+      setExpenses(childExpenses);
     } catch (error) {
       console.error(error);
       alert("Unable to load expenses.");
@@ -54,9 +78,8 @@ export default function Expenses() {
 
   useEffect(() => {
     loadData();
-  }, [user]);
+  }, [user, selectedChild]);
 
-  // Add new expense only
   async function handleCreateExpense(
     expense: Omit<Expense, "id" | "createdAt">
   ) {
@@ -74,7 +97,6 @@ export default function Expenses() {
     }
   }
 
-  // Update existing expense
   async function handleUpdateExpense(
     expense: Omit<Expense, "id" | "createdAt">
   ) {
@@ -129,8 +151,6 @@ export default function Expenses() {
     <DashboardLayout>
       <div className="space-y-8">
 
-        {/* Header */}
-
         <div>
 
           <h1 className="text-4xl font-bold">
@@ -138,19 +158,20 @@ export default function Expenses() {
           </h1>
 
           <p className="mt-2 text-gray-500">
-            Record and manage therapy expenses.
+            Recording expenses for{" "}
+            <span className="font-semibold text-blue-600">
+              {selectedChild
+                ? `${selectedChild.firstName} ${selectedChild.lastName}`
+                : "No Child Selected"}
+            </span>
           </p>
 
         </div>
-
-        {/* Always Add New */}
 
         <ExpenseForm
           allocations={allocations}
           onSubmit={handleCreateExpense}
         />
-
-        {/* Edit Popup */}
 
         <EditExpenseModal
           isOpen={editingExpense !== null}
@@ -159,8 +180,6 @@ export default function Expenses() {
           onSave={handleUpdateExpense}
           onClose={() => setEditingExpense(null)}
         />
-
-        {/* Expense List */}
 
         <div>
 

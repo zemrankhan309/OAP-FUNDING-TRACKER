@@ -1,15 +1,16 @@
 import { useEffect, useState } from "react";
 
 import DashboardLayout from "../layouts/DashboardLayout";
-
 import SummaryCard from "../components/dashboard/SummaryCard";
 
 import { useAuth } from "../contexts/AuthContext";
+import { useSelectedChild } from "../contexts/SelectedChildContext";
 
 import { getDashboardData } from "../services/dashboardService";
 
 export default function Dashboard() {
   const { user } = useAuth();
+  const { selectedChild } = useSelectedChild();
 
   const [loading, setLoading] = useState(true);
 
@@ -23,18 +24,30 @@ export default function Dashboard() {
   });
 
   useEffect(() => {
-    if (!user) return;
-
     async function loadDashboard() {
-      const dashboard = await getDashboardData(user.uid);
+      if (!user || !selectedChild) {
+        setLoading(false);
+        return;
+      }
 
-      setData(dashboard);
+      setLoading(true);
 
-      setLoading(false);
+      try {
+        const dashboard = await getDashboardData(
+          user.uid,
+          selectedChild.id
+        );
+
+        setData(dashboard);
+      } catch (error) {
+        console.error(error);
+      } finally {
+        setLoading(false);
+      }
     }
 
     loadDashboard();
-  }, [user]);
+  }, [user, selectedChild]);
 
   if (loading) {
     return (
@@ -50,8 +63,6 @@ export default function Dashboard() {
     <DashboardLayout>
       <div className="space-y-8">
 
-        {/* Header */}
-
         <div>
           <h1 className="text-4xl font-bold">
             Dashboard
@@ -60,9 +71,14 @@ export default function Dashboard() {
           <p className="mt-2 text-gray-500">
             Welcome back! Here's your funding summary.
           </p>
-        </div>
 
-        {/* Summary */}
+          {selectedChild && (
+            <p className="mt-2 text-sm font-semibold text-blue-600">
+              Viewing: {selectedChild.firstName}{" "}
+              {selectedChild.lastName}
+            </p>
+          )}
+        </div>
 
         <div className="grid gap-6 md:grid-cols-3">
 
@@ -84,8 +100,6 @@ export default function Dashboard() {
           />
 
         </div>
-
-        {/* Progress */}
 
         <div className="rounded-xl bg-white p-6 shadow">
 
@@ -117,8 +131,6 @@ export default function Dashboard() {
 
         </div>
 
-        {/* Recent Expenses */}
-
         <div className="rounded-xl bg-white p-6 shadow">
 
           <h2 className="mb-5 text-xl font-semibold">
@@ -146,11 +158,7 @@ export default function Dashboard() {
                     </div>
 
                     <div className="text-sm text-gray-500">
-                      {expense.startDate}
-
-                      {"  "}to{"  "}
-
-                      {expense.endDate}
+                      {expense.startDate} to {expense.endDate}
                     </div>
 
                   </div>
