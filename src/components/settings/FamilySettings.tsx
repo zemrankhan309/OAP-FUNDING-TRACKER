@@ -38,6 +38,8 @@ export default function FamilySettings() {
   }
 
   async function handleSave() {
+    if (!form) return;
+
     await updateSettings(form);
   }
 
@@ -99,22 +101,11 @@ export default function FamilySettings() {
             }
             className="w-full rounded-lg border border-gray-300 p-3"
           >
-            <option>
-              Ontario Autism Program
-            </option>
-
-            <option>
-              Jordan's Principle
-            </option>
-
+            <option>Ontario Autism Program</option>
+            <option>Jordan's Principle</option>
             <option>Insurance</option>
-
-            <option>
-              Private Funding
-            </option>
-
+            <option>Private Funding</option>
             <option>Other</option>
-
           </select>
 
         </div>

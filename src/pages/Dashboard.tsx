@@ -8,13 +8,25 @@ import { useSelectedChild } from "../contexts/SelectedChildContext";
 
 import { getDashboardData } from "../services/dashboardService";
 
+import type { Allocation } from "../types/allocation";
+import type { Expense } from "../types/expense";
+
+interface DashboardData {
+  allocations: Allocation[];
+  expenses: Expense[];
+  totalFunding: number;
+  totalSpent: number;
+  remaining: number;
+  percentUsed: number;
+}
+
 export default function Dashboard() {
   const { user } = useAuth();
   const { selectedChild } = useSelectedChild();
 
   const [loading, setLoading] = useState(true);
 
-  const [data, setData] = useState({
+  const [data, setData] = useState<DashboardData>({
     allocations: [],
     expenses: [],
     totalFunding: 0,
@@ -63,7 +75,10 @@ export default function Dashboard() {
     <DashboardLayout>
       <div className="space-y-8">
 
+        {/* Header */}
+
         <div>
+
           <h1 className="text-4xl font-bold">
             Dashboard
           </h1>
@@ -78,7 +93,10 @@ export default function Dashboard() {
               {selectedChild.lastName}
             </p>
           )}
+
         </div>
+
+        {/* Summary Cards */}
 
         <div className="grid gap-6 md:grid-cols-3">
 
@@ -100,6 +118,8 @@ export default function Dashboard() {
           />
 
         </div>
+
+        {/* Funding Progress */}
 
         <div className="rounded-xl bg-white p-6 shadow">
 
@@ -131,6 +151,8 @@ export default function Dashboard() {
 
         </div>
 
+        {/* Recent Expenses */}
+
         <div className="rounded-xl bg-white p-6 shadow">
 
           <h2 className="mb-5 text-xl font-semibold">
@@ -144,33 +166,35 @@ export default function Dashboard() {
           ) : (
             <div className="space-y-4">
 
-              {data.expenses.slice(0, 5).map((expense: any) => (
+              {data.expenses
+                .slice(0, 5)
+                .map((expense: Expense) => (
 
-                <div
-                  key={expense.id}
-                  className="flex items-center justify-between border-b pb-3"
-                >
+                  <div
+                    key={expense.id}
+                    className="flex items-center justify-between border-b pb-3"
+                  >
 
-                  <div>
+                    <div>
 
-                    <div className="font-semibold">
-                      {expense.category}
+                      <div className="font-semibold">
+                        {expense.category}
+                      </div>
+
+                      <div className="text-sm text-gray-500">
+                        {expense.startDate} to {expense.endDate}
+                      </div>
+
                     </div>
 
-                    <div className="text-sm text-gray-500">
-                      {expense.startDate} to {expense.endDate}
+                    <div className="font-bold text-red-500">
+                      -$
+                      {Number(expense.amount).toLocaleString()}
                     </div>
 
                   </div>
 
-                  <div className="font-bold text-red-500">
-                    -$
-                    {Number(expense.amount).toLocaleString()}
-                  </div>
-
-                </div>
-
-              ))}
+                ))}
 
             </div>
           )}

@@ -38,6 +38,8 @@ export default function FundingSettings() {
   }
 
   async function handleSave() {
+    if (!form) return;
+
     await updateSettings(form);
   }
 

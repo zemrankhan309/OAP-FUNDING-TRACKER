@@ -11,26 +11,27 @@ import {
 
 import { db } from "../firebase/config";
 
-export interface Allocation {
-  childId: string;
+import type { Allocation } from "../types/allocation";
 
-  name: string;
-
-  program: string;
-
-  amount: number;
-
-  startDate: string;
-
-  endDate: string;
-}
+/**
+ * Data required when creating a new allocation.
+ */
+export type AllocationInput = Pick<
+  Allocation,
+  | "childId"
+  | "name"
+  | "program"
+  | "amount"
+  | "startDate"
+  | "endDate"
+>;
 
 /**
  * Create Funding Allocation
  */
 export async function createAllocation(
   uid: string,
-  allocation: Allocation
+  allocation: AllocationInput
 ) {
   const allocationRef = collection(
     db,
@@ -39,16 +40,13 @@ export async function createAllocation(
     "allocations"
   );
 
-  const snapshot = await getDocs(
-    allocationRef
-  );
+  const snapshot = await getDocs(allocationRef);
 
   const hasActiveAllocation =
     snapshot.docs.some(
       (doc) =>
         doc.data().active === true &&
-        doc.data().childId ===
-          allocation.childId
+        doc.data().childId === allocation.childId
     );
 
   await addDoc(allocationRef, {
@@ -69,7 +67,7 @@ export async function createAllocation(
  */
 export async function getAllocations(
   uid: string
-) {
+): Promise<Allocation[]> {
   const allocationRef = collection(
     db,
     "users",
@@ -86,7 +84,7 @@ export async function getAllocations(
 
   return snapshot.docs.map((doc) => ({
     id: doc.id,
-    ...doc.data(),
+    ...(doc.data() as Omit<Allocation, "id">),
   }));
 }
 
@@ -96,7 +94,7 @@ export async function getAllocations(
 export async function updateAllocation(
   uid: string,
   allocationId: string,
-  allocation: Partial<Allocation>
+  allocation: Partial<AllocationInput>
 ) {
   await updateDoc(
     doc(
@@ -112,8 +110,6 @@ export async function updateAllocation(
 
 /**
  * Set Active Allocation
- *
- * Only within the SAME child.
  */
 export async function setActiveAllocation(
   uid: string,
@@ -128,10 +124,9 @@ export async function setActiveAllocation(
     )
   );
 
-  const current =
-    snapshot.docs.find(
-      (d) => d.id === allocationId
-    );
+  const current = snapshot.docs.find(
+    (d) => d.id === allocationId
+  );
 
   if (!current) return;
 
@@ -174,7 +169,6 @@ export async function closeAllocation(
     ),
     {
       active: false,
-
       status: "closed",
     }
   );
@@ -197,7 +191,6 @@ export async function archiveAllocation(
     ),
     {
       active: false,
-
       status: "archived",
     }
   );

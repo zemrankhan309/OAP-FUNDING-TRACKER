@@ -1,4 +1,5 @@
 import type { Allocation } from "../types/allocation";
+import type { AllocationInput } from "./allocationService";
 
 import {
   createAllocation,
@@ -18,7 +19,7 @@ export async function loadFunding(
   uid: string,
   childId: string
 ): Promise<Allocation[]> {
-  return await getFundingSummary(uid, childId);
+  return getFundingSummary(uid, childId);
 }
 
 /**
@@ -27,7 +28,7 @@ export async function loadFunding(
 export async function createFunding(
   uid: string,
   childId: string,
-  allocation: Omit<Allocation, "childId">
+  allocation: Omit<AllocationInput, "childId">
 ) {
   await createAllocation(uid, {
     childId,
@@ -41,7 +42,7 @@ export async function createFunding(
 export async function editFunding(
   uid: string,
   allocationId: string,
-  allocation: Partial<Allocation>
+  allocation: Partial<AllocationInput>
 ) {
   await updateAllocation(
     uid,
@@ -57,10 +58,7 @@ export async function activateFunding(
   uid: string,
   allocationId: string
 ) {
-  await setActiveAllocation(
-    uid,
-    allocationId
-  );
+  await setActiveAllocation(uid, allocationId);
 }
 
 /**
@@ -70,10 +68,7 @@ export async function closeFunding(
   uid: string,
   allocationId: string
 ) {
-  await closeAllocation(
-    uid,
-    allocationId
-  );
+  await closeAllocation(uid, allocationId);
 }
 
 /**
@@ -83,8 +78,5 @@ export async function archiveFunding(
   uid: string,
   allocationId: string
 ) {
-  await archiveAllocation(
-    uid,
-    allocationId
-  );
+  await archiveAllocation(uid, allocationId);
 }
