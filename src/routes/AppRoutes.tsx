@@ -6,6 +6,7 @@ import Children from "../pages/Children";
 import Funding from "../pages/Funding";
 import Expenses from "../pages/Expenses";
 import FinancialStatement from "../pages/FinancialStatement";
+import Settings from "../pages/Settings";
 
 import ProtectedRoute from "./ProtectedRoute";
 
@@ -64,6 +65,16 @@ export default function AppRoutes() {
         element={
           <ProtectedRoute>
             <FinancialStatement />
+          </ProtectedRoute>
+        }
+      />
+
+      {/* Settings */}
+      <Route
+        path="/settings"
+        element={
+          <ProtectedRoute>
+            <Settings />
           </ProtectedRoute>
         }
       />
