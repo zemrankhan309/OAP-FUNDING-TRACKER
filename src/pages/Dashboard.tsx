@@ -64,8 +64,10 @@ export default function Dashboard() {
   if (loading) {
     return (
       <DashboardLayout>
-        <div className="text-xl">
-          Loading Dashboard...
+        <div className="flex items-center justify-center py-20">
+          <div className="text-xl font-semibold">
+            Loading Dashboard...
+          </div>
         </div>
       </DashboardLayout>
     );
@@ -74,12 +76,9 @@ export default function Dashboard() {
   return (
     <DashboardLayout>
       <div className="space-y-8">
-
         {/* Header */}
-
         <div>
-
-          <h1 className="text-4xl font-bold">
+          <h1 className="text-4xl font-bold tracking-tight">
             Dashboard
           </h1>
 
@@ -88,18 +87,15 @@ export default function Dashboard() {
           </p>
 
           {selectedChild && (
-            <p className="mt-2 text-sm font-semibold text-blue-600">
+            <div className="mt-4 inline-flex rounded-full bg-blue-50 px-4 py-2 text-sm font-semibold text-blue-700">
               Viewing: {selectedChild.firstName}{" "}
               {selectedChild.lastName}
-            </p>
+            </div>
           )}
-
         </div>
 
-        {/* Summary Cards */}
-
+        {/* Summary */}
         <div className="grid gap-6 md:grid-cols-3">
-
           <SummaryCard
             title="Total Funding"
             value={`$${data.totalFunding.toLocaleString()}`}
@@ -116,29 +112,23 @@ export default function Dashboard() {
             value={`$${data.remaining.toLocaleString()}`}
             color="text-green-600"
           />
-
         </div>
 
         {/* Funding Progress */}
-
         <div className="rounded-xl bg-white p-6 shadow">
-
-          <div className="mb-3 flex items-center justify-between">
-
+          <div className="mb-4 flex items-center justify-between">
             <h2 className="text-xl font-semibold">
               Funding Used
             </h2>
 
-            <span className="font-bold">
+            <span className="rounded-full bg-blue-100 px-3 py-1 font-bold text-blue-700">
               {data.percentUsed.toFixed(1)}%
             </span>
-
           </div>
 
           <div className="h-5 overflow-hidden rounded-full bg-gray-200">
-
             <div
-              className="h-full bg-blue-600 transition-all duration-500"
+              className="h-full rounded-full bg-blue-600 transition-all duration-700"
               style={{
                 width: `${Math.min(
                   data.percentUsed,
@@ -146,61 +136,117 @@ export default function Dashboard() {
                 )}%`,
               }}
             />
+          </div>
+        </div>
 
+        {/* Quick Stats */}
+        <div className="grid gap-6 lg:grid-cols-3">
+          <div className="rounded-xl bg-white p-6 shadow">
+            <h3 className="text-lg font-semibold">
+              Recent Expenses
+            </h3>
+
+            <p className="mt-2 text-4xl font-bold">
+              {data.expenses.length}
+            </p>
+
+            <p className="mt-2 text-sm text-gray-500">
+              Total recorded expenses
+            </p>
           </div>
 
+          <div className="rounded-xl bg-white p-6 shadow">
+            <h3 className="text-lg font-semibold">
+              Funding Remaining
+            </h3>
+
+            <p className="mt-2 text-4xl font-bold text-green-600">
+              ${data.remaining.toLocaleString()}
+            </p>
+
+            <p className="mt-2 text-sm text-gray-500">
+              Available funding balance
+            </p>
+          </div>
+
+          <div className="rounded-xl bg-white p-6 shadow">
+            <h3 className="text-lg font-semibold">
+              Funding Used
+            </h3>
+
+            <p className="mt-2 text-4xl font-bold text-blue-600">
+              {data.percentUsed.toFixed(1)}%
+            </p>
+
+            <p className="mt-2 text-sm text-gray-500">
+              Overall funding utilization
+            </p>
+          </div>
         </div>
 
         {/* Recent Expenses */}
-
         <div className="rounded-xl bg-white p-6 shadow">
+          <div className="mb-6 flex items-center justify-between">
+            <h2 className="text-xl font-semibold">
+              Recent Expenses
+            </h2>
 
-          <h2 className="mb-5 text-xl font-semibold">
-            Recent Expenses
-          </h2>
+            <button className="text-sm font-semibold text-blue-600 hover:text-blue-700">
+              View All →
+            </button>
+          </div>
 
           {data.expenses.length === 0 ? (
-            <p className="text-gray-500">
-              No expenses yet.
-            </p>
+            <div className="rounded-lg border border-dashed border-gray-300 py-12 text-center">
+              <div className="text-lg font-medium text-gray-600">
+                No expenses yet
+              </div>
+
+              <p className="mt-2 text-gray-500">
+                Add your first expense or import a
+                therapy statement.
+              </p>
+            </div>
           ) : (
             <div className="space-y-4">
-
               {data.expenses
                 .slice(0, 5)
-                .map((expense: Expense) => (
-
+                .map((expense) => (
                   <div
                     key={expense.id}
-                    className="flex items-center justify-between border-b pb-3"
+                    className="flex items-center justify-between rounded-lg border p-4 transition hover:bg-gray-50"
                   >
-
                     <div>
-
                       <div className="font-semibold">
                         {expense.category}
                       </div>
 
-                      <div className="text-sm text-gray-500">
-                        {expense.startDate} to {expense.endDate}
+                      <div className="mt-1 text-sm text-gray-500">
+                        {expense.startDate} –{" "}
+                        {expense.endDate}
+                      </div>
+                    </div>
+
+                    <div className="text-right">
+                      <div className="font-bold text-red-500">
+                        -$
+                        {Number(
+                          expense.amount
+                        ).toLocaleString()}
                       </div>
 
+                      {expense.source ===
+                        "invoice-import" && (
+                        <div className="mt-1 text-xs font-semibold text-green-600">
+                          Imported
+                        </div>
+                      )}
                     </div>
-
-                    <div className="font-bold text-red-500">
-                      -$
-                      {Number(expense.amount).toLocaleString()}
-                    </div>
-
                   </div>
-
                 ))}
-
             </div>
           )}
-
         </div>
-
       </div>
     </DashboardLayout>
   );

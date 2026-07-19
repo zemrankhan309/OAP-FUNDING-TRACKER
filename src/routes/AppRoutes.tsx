@@ -8,6 +8,8 @@ import Expenses from "../pages/Expenses";
 import FinancialStatement from "../pages/FinancialStatement";
 import Settings from "../pages/Settings";
 
+import InvoiceUploader from "../features/invoice-import/components/InvoiceUploader";
+
 import ProtectedRoute from "./ProtectedRoute";
 
 export default function AppRoutes() {
@@ -75,6 +77,16 @@ export default function AppRoutes() {
         element={
           <ProtectedRoute>
             <Settings />
+          </ProtectedRoute>
+        }
+      />
+
+      {/* Invoice Import (Temporary Test Page) */}
+      <Route
+        path="/invoice-import"
+        element={
+          <ProtectedRoute>
+            <InvoiceUploader />
           </ProtectedRoute>
         }
       />

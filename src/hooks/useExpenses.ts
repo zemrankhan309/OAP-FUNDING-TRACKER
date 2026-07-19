@@ -8,10 +8,13 @@ import type { Allocation } from "../types/allocation";
 
 import {
   loadExpenses,
-  addExpense,
-  editExpense,
   removeExpense,
 } from "../services/expenseActions";
+
+import {
+  saveExpense as saveExpenseEngine,
+  saveExistingExpense,
+} from "../services/expenseEngine";
 
 export function useExpenses() {
   const { user } = useAuth();
@@ -49,7 +52,6 @@ export function useExpenses() {
 
       setExpenses(data.expenses);
       setAllocations(data.allocations);
-
     } catch (error) {
       console.error(error);
     } finally {
@@ -69,7 +71,7 @@ export function useExpenses() {
   ) {
     if (!user) return;
 
-    await addExpense(
+    await saveExpenseEngine(
       user.uid,
       expense
     );
@@ -85,7 +87,7 @@ export function useExpenses() {
   ) {
     if (!user || !editingExpense) return;
 
-    await editExpense(
+    await saveExistingExpense(
       user.uid,
       editingExpense.id,
       expense

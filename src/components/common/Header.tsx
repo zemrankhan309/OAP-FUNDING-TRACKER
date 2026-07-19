@@ -1,4 +1,7 @@
-import { Bell, UserCircle } from "lucide-react";
+import {
+  Bell,
+  UserCircle,
+} from "lucide-react";
 
 import Logo from "./Logo";
 import ChildSelector from "./ChildSelector";
@@ -9,10 +12,21 @@ export default function Header() {
   const { user } = useAuth();
 
   return (
-    <header className="flex h-20 items-center justify-between border-b border-gray-200 bg-white px-6 shadow-sm">
+    <header className="flex h-20 items-center justify-between border-b border-gray-200 bg-white px-8 shadow-sm">
+      {/* Left */}
+      <div className="flex items-center gap-8">
+        <Logo />
 
-      {/* Logo */}
-      <Logo />
+        <div className="hidden xl:block">
+          <p className="text-xs font-semibold uppercase tracking-wider text-gray-400">
+            OAP Funding Tracker
+          </p>
+
+          <h2 className="text-lg font-bold text-gray-800">
+            Manage Funding with Confidence
+          </h2>
+        </div>
+      </div>
 
       {/* Child Selector */}
       <div className="hidden flex-1 justify-center lg:flex">
@@ -20,8 +34,7 @@ export default function Header() {
       </div>
 
       {/* Right */}
-      <div className="flex items-center gap-6">
-
+      <div className="flex items-center gap-4">
         {/* Notifications */}
         <button
           className="rounded-full p-2 transition hover:bg-gray-100"
@@ -34,8 +47,7 @@ export default function Header() {
         </button>
 
         {/* User */}
-        <div className="flex items-center gap-3">
-
+        <div className="flex items-center gap-3 rounded-xl border border-gray-200 px-3 py-2">
           {user?.photoURL ? (
             <img
               src={user.photoURL}
@@ -49,13 +61,12 @@ export default function Header() {
             />
           )}
 
-          <div className="text-right leading-tight">
-
-            <p className="text-sm font-semibold text-gray-800">
-              Welcome
+          <div className="leading-tight">
+            <p className="text-xs uppercase tracking-wide text-gray-400">
+              Signed in as
             </p>
 
-            <p className="text-sm font-medium text-gray-700">
+            <p className="font-semibold text-gray-800">
               {user?.displayName ?? "Guest User"}
             </p>
 
@@ -64,13 +75,9 @@ export default function Header() {
                 {user.email}
               </p>
             )}
-
           </div>
-
         </div>
-
       </div>
-
     </header>
   );
 }
