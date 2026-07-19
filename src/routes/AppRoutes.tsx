@@ -8,18 +8,13 @@ import Expenses from "../pages/Expenses";
 import FinancialStatement from "../pages/FinancialStatement";
 import Settings from "../pages/Settings";
 
-import InvoiceUploader from "../features/invoice-import/components/InvoiceUploader";
-
 import ProtectedRoute from "./ProtectedRoute";
 
 export default function AppRoutes() {
   return (
     <Routes>
       {/* Public Route */}
-      <Route
-        path="/login"
-        element={<Login />}
-      />
+      <Route path="/login" element={<Login />} />
 
       {/* Dashboard */}
       <Route
@@ -81,36 +76,16 @@ export default function AppRoutes() {
         }
       />
 
-      {/* Invoice Import (Temporary Test Page) */}
-      <Route
-        path="/invoice-import"
-        element={
-          <ProtectedRoute>
-            <InvoiceUploader />
-          </ProtectedRoute>
-        }
-      />
-
       {/* Default */}
       <Route
         path="/"
-        element={
-          <Navigate
-            to="/dashboard"
-            replace
-          />
-        }
+        element={<Navigate to="/dashboard" replace />}
       />
 
       {/* Catch All */}
       <Route
         path="*"
-        element={
-          <Navigate
-            to="/dashboard"
-            replace
-          />
-        }
+        element={<Navigate to="/dashboard" replace />}
       />
     </Routes>
   );

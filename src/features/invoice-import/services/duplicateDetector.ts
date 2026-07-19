@@ -23,10 +23,13 @@ export function detectDuplicates(
 
       // Fallback match for invoices without numbers
       return (
-        normalize(expense.date) === normalize(session.serviceDate) &&
-        normalize(expense.service) === normalize(session.service) &&
+        normalize(expense.startDate) ===
+          normalize(session.serviceDate) &&
+        normalize(expense.category) ===
+          normalize(session.service) &&
         Number(expense.amount) === Number(session.amount) &&
-        normalize(expense.provider) === normalize(session.provider)
+        normalize(expense.provider) ===
+          normalize(session.provider)
       );
     });
 

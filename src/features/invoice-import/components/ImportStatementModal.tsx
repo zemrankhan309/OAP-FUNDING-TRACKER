@@ -1,13 +1,12 @@
 import Modal from "../../../components/common/Modal";
 import InvoiceUploader from "./InvoiceUploader";
 
+import type { Allocation } from "../../../types/allocation";
+
 interface Props {
   isOpen: boolean;
 
-  allocations: {
-    id: string;
-    name: string;
-  }[];
+  allocations: Allocation[];
 
   onClose: () => void;
 }

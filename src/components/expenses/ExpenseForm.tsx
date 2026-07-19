@@ -108,6 +108,18 @@ export default function ExpenseForm({
         startDate: expense.startDate,
         endDate: expense.endDate,
         notes: expense.notes,
+
+        therapist:
+          editingExpense?.therapist ?? "",
+
+        invoiceNumber:
+          editingExpense?.invoiceNumber ?? "",
+
+        status:
+          editingExpense?.status ?? "approved",
+
+        source:
+          editingExpense?.source ?? "manual",
       });
 
       if (!editingExpense) {
@@ -127,27 +139,24 @@ export default function ExpenseForm({
       className="rounded-2xl bg-white p-8 shadow"
     >
       <div className="mb-8 flex items-center justify-between">
-
         <div>
-
           <h2 className="text-3xl font-bold text-gray-800">
-            {editingExpense ? "Edit Expense" : "Add Expense"}
+            {editingExpense
+              ? "Edit Expense"
+              : "Add Expense"}
           </h2>
 
           <p className="mt-2 text-gray-500">
-            Record a therapy expense against an OAP funding allocation.
+            Record a therapy expense against an
+            OAP funding allocation.
           </p>
-
         </div>
-
       </div>
 
       <div className="grid gap-6 md:grid-cols-2">
-
         {/* Allocation */}
 
         <div>
-
           <label className="mb-2 flex items-center gap-2 font-medium">
             <Wallet size={18} />
             Funding Allocation
@@ -157,7 +166,10 @@ export default function ExpenseForm({
             required
             value={expense.allocationId}
             onChange={(e) =>
-              update("allocationId", e.target.value)
+              update(
+                "allocationId",
+                e.target.value
+              )
             }
             className={inputClass}
           >
@@ -174,13 +186,11 @@ export default function ExpenseForm({
               </option>
             ))}
           </select>
-
         </div>
 
         {/* Category */}
 
         <div>
-
           <label className="mb-2 flex items-center gap-2 font-medium">
             <Tag size={18} />
             Category
@@ -189,30 +199,37 @@ export default function ExpenseForm({
           <select
             value={expense.category}
             onChange={(e) =>
-              update("category", e.target.value)
+              update(
+                "category",
+                e.target.value
+              )
             }
             className={inputClass}
           >
             <option>ABA Therapy</option>
             <option>Speech Therapy</option>
-            <option>Occupational Therapy</option>
+            <option>
+              Occupational Therapy
+            </option>
             <option>Psychology</option>
             <option>Physiotherapy</option>
-            <option>Behaviour Consultation</option>
+            <option>
+              Behaviour Consultation
+            </option>
             <option>Respite</option>
-            <option>Parent Training</option>
+            <option>
+              Parent Training
+            </option>
             <option>Travel</option>
             <option>Equipment</option>
             <option>Technology</option>
             <option>Other</option>
           </select>
-
         </div>
 
         {/* Provider */}
 
         <div>
-
           <label className="mb-2 flex items-center gap-2 font-medium">
             <Building2 size={18} />
             Provider
@@ -222,25 +239,25 @@ export default function ExpenseForm({
             type="text"
             value={expense.provider}
             onChange={(e) =>
-              update("provider", e.target.value)
+              update(
+                "provider",
+                e.target.value
+              )
             }
             placeholder="Provider or clinic"
             className={inputClass}
           />
-
         </div>
 
         {/* Amount */}
 
         <div>
-
           <label className="mb-2 flex items-center gap-2 font-medium">
             <DollarSign size={18} />
             Amount
           </label>
 
           <div className="relative">
-
             <span className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-500">
               $
             </span>
@@ -251,21 +268,20 @@ export default function ExpenseForm({
               step="0.01"
               value={expense.amount}
               onChange={(e) =>
-                update("amount", e.target.value)
+                update(
+                  "amount",
+                  e.target.value
+                )
               }
               className="w-full rounded-xl border border-gray-300 py-3 pl-8 pr-4 transition focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-100"
             />
-
           </div>
-
         </div>
-
       </div>
 
       {/* Description */}
 
       <div className="mt-6">
-
         <label className="mb-2 flex items-center gap-2 font-medium">
           <FileText size={18} />
           Description
@@ -275,20 +291,20 @@ export default function ExpenseForm({
           type="text"
           value={expense.description}
           onChange={(e) =>
-            update("description", e.target.value)
+            update(
+              "description",
+              e.target.value
+            )
           }
           placeholder="Session description"
           className={inputClass}
         />
-
       </div>
 
       {/* Dates */}
 
       <div className="mt-6 grid gap-6 md:grid-cols-2">
-
         <div>
-
           <label className="mb-2 flex items-center gap-2 font-medium">
             <Calendar size={18} />
             Start Date
@@ -298,15 +314,16 @@ export default function ExpenseForm({
             type="date"
             value={expense.startDate}
             onChange={(e) =>
-              update("startDate", e.target.value)
+              update(
+                "startDate",
+                e.target.value
+              )
             }
             className={inputClass}
           />
-
         </div>
 
         <div>
-
           <label className="mb-2 flex items-center gap-2 font-medium">
             <Calendar size={18} />
             End Date
@@ -316,19 +333,19 @@ export default function ExpenseForm({
             type="date"
             value={expense.endDate}
             onChange={(e) =>
-              update("endDate", e.target.value)
+              update(
+                "endDate",
+                e.target.value
+              )
             }
             className={inputClass}
           />
-
         </div>
-
       </div>
 
       {/* Notes */}
 
       <div className="mt-6">
-
         <label className="mb-2 flex items-center gap-2 font-medium">
           <StickyNote size={18} />
           Notes
@@ -338,18 +355,19 @@ export default function ExpenseForm({
           rows={4}
           value={expense.notes}
           onChange={(e) =>
-            update("notes", e.target.value)
+            update(
+              "notes",
+              e.target.value
+            )
           }
           placeholder="Optional notes..."
           className={inputClass}
         />
-
       </div>
 
       {/* Buttons */}
 
       <div className="mt-8 flex flex-wrap gap-4">
-
         <button
           type="submit"
           disabled={saving}
@@ -374,9 +392,7 @@ export default function ExpenseForm({
             Cancel
           </button>
         )}
-
       </div>
-
     </form>
   );
 }

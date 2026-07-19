@@ -1,6 +1,6 @@
 import { saveExpense } from "../../../services/expenseEngine";
 
-import type { TherapySession } from "../types/invoice";
+import type { ImportableTherapySession } from "../types/invoice";
 
 export interface ImportResult {
   imported: number;
@@ -12,7 +12,7 @@ export interface ImportResult {
 export async function importSessions(
   uid: string,
   allocationId: string,
-  sessions: TherapySession[]
+  sessions: ImportableTherapySession[]
 ): Promise<ImportResult> {
   let imported = 0;
   let skipped = 0;
