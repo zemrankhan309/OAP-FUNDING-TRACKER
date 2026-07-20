@@ -8,6 +8,8 @@ import {
   query,
   serverTimestamp,
   updateDoc,
+  writeBatch,
+  where,
 } from "firebase/firestore";
 
 import { db } from "../firebase/config";
@@ -21,18 +23,11 @@ export async function createChild(
   uid: string,
   child: Omit<Child, "id" | "createdAt" | "status">
 ) {
-  const ref = collection(
-    db,
-    "users",
-    uid,
-    "children"
-  );
+  const ref = collection(db, "users", uid, "children");
 
   await addDoc(ref, {
     ...child,
-
     status: "active",
-
     createdAt: serverTimestamp(),
   });
 }
@@ -40,20 +35,10 @@ export async function createChild(
 /**
  * Get All Children
  */
-export async function getChildren(
-  uid: string
-): Promise<Child[]> {
-  const ref = collection(
-    db,
-    "users",
-    uid,
-    "children"
-  );
+export async function getChildren(uid: string): Promise<Child[]> {
+  const ref = collection(db, "users", uid, "children");
 
-  const q = query(
-    ref,
-    orderBy("createdAt", "desc")
-  );
+  const q = query(ref, orderBy("createdAt", "desc"));
 
   const snapshot = await getDocs(q);
 
@@ -71,13 +56,7 @@ export async function updateChild(
   childId: string,
   child: Partial<Child>
 ) {
-  const ref = doc(
-    db,
-    "users",
-    uid,
-    "children",
-    childId
-  );
+  const ref = doc(db, "users", uid, "children", childId);
 
   await updateDoc(ref, {
     ...child,
@@ -91,13 +70,7 @@ export async function archiveChild(
   uid: string,
   childId: string
 ) {
-  const ref = doc(
-    db,
-    "users",
-    uid,
-    "children",
-    childId
-  );
+  const ref = doc(db, "users", uid, "children", childId);
 
   await updateDoc(ref, {
     status: "archived",
@@ -111,13 +84,7 @@ export async function restoreChild(
   uid: string,
   childId: string
 ) {
-  const ref = doc(
-    db,
-    "users",
-    uid,
-    "children",
-    childId
-  );
+  const ref = doc(db, "users", uid, "children", childId);
 
   await updateDoc(ref, {
     status: "active",
@@ -127,15 +94,57 @@ export async function restoreChild(
 /**
  * Delete Child
  *
- * NOTE:
- * Later we'll prevent deletion if
- * the child has funding allocations.
+ * Cascade deletes:
+ * - Expenses
+ * - Funding Allocations
+ * - Child
  */
 export async function deleteChild(
   uid: string,
   childId: string
 ) {
-  const ref = doc(
+  const batch = writeBatch(db);
+
+  //
+  // Delete expenses
+  //
+  const expensesRef = collection(
+    db,
+    "users",
+    uid,
+    "expenses"
+  );
+
+  const expensesSnapshot = await getDocs(
+    query(expensesRef, where("childId", "==", childId))
+  );
+
+  expensesSnapshot.forEach((docSnap) => {
+    batch.delete(docSnap.ref);
+  });
+
+  //
+  // Delete allocations
+  //
+  const allocationsRef = collection(
+    db,
+    "users",
+    uid,
+    "allocations"
+  );
+
+  const allocationsSnapshot = await getDocs(
+    query(allocationsRef, where("childId", "==", childId))
+  );
+
+  allocationsSnapshot.forEach((docSnap) => {
+    batch.delete(docSnap.ref);
+  });
+
+  //
+  // Delete child
+  //
+  const childRef = doc(
     db,
     "users",
     uid,
@@ -143,5 +152,10 @@ export async function deleteChild(
     childId
   );
 
-  await deleteDoc(ref);
+  batch.delete(childRef);
+
+  //
+  // Commit everything atomically
+  //
+  await batch.commit();
 }

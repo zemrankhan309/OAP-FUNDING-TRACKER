@@ -5,6 +5,7 @@ import {
   getDocs,
   orderBy,
   query,
+  runTransaction,
   serverTimestamp,
   updateDoc,
 } from "firebase/firestore";
@@ -51,13 +52,10 @@ export async function createAllocation(
 
   await addDoc(allocationRef, {
     ...allocation,
-
     active: !hasActiveAllocation,
-
     status: hasActiveAllocation
       ? "inactive"
       : "active",
-
     createdAt: serverTimestamp(),
   });
 }
@@ -110,46 +108,54 @@ export async function updateAllocation(
 
 /**
  * Set Active Allocation
+ *
+ * Uses a Firestore transaction to ensure that only one allocation
+ * can be active for a child, even if multiple clients update
+ * at the same time.
  */
 export async function setActiveAllocation(
   uid: string,
   allocationId: string
 ) {
-  const snapshot = await getDocs(
-    collection(
-      db,
-      "users",
-      uid,
-      "allocations"
-    )
+  const allocationsRef = collection(
+    db,
+    "users",
+    uid,
+    "allocations"
   );
 
-  const current = snapshot.docs.find(
-    (d) => d.id === allocationId
-  );
+  await runTransaction(db, async (transaction) => {
+    const snapshot = await transaction.get(
+      allocationsRef
+    );
 
-  if (!current) return;
+    const current = snapshot.docs.find(
+      (d) => d.id === allocationId
+    );
 
-  const currentChildId =
-    current.data().childId;
+    if (!current) {
+      throw new Error("Allocation not found.");
+    }
 
-  for (const allocation of snapshot.docs) {
-    if (
-      allocation.data().childId !==
-      currentChildId
-    )
-      continue;
+    const childId = current.data().childId;
 
-    await updateDoc(allocation.ref, {
-      active:
-        allocation.id === allocationId,
+    snapshot.docs.forEach((allocation) => {
+      if (
+        allocation.data().childId !== childId
+      ) {
+        return;
+      }
 
-      status:
-        allocation.id === allocationId
-          ? "active"
-          : "inactive",
+      transaction.update(allocation.ref, {
+        active:
+          allocation.id === allocationId,
+        status:
+          allocation.id === allocationId
+            ? "active"
+            : "inactive",
+      });
     });
-  }
+  });
 }
 
 /**
