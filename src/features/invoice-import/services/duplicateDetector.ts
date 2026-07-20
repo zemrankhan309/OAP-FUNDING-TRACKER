@@ -1,5 +1,8 @@
 import type { Expense } from "../../../types/expense";
-import type { TherapySession } from "../types/invoice";
+import type {
+  ImportableTherapySession,
+  TherapySession,
+} from "../types/invoice";
 
 function normalize(value: unknown): string {
   return String(value ?? "").trim().toLowerCase();
@@ -8,29 +11,30 @@ function normalize(value: unknown): string {
 export function detectDuplicates(
   sessions: TherapySession[],
   expenses: Expense[]
-): TherapySession[] {
+): ImportableTherapySession[] {
   return sessions.map((session) => {
     const duplicate = expenses.some((expense) => {
-      // Strong match when invoice numbers exist
+      const matchingDetails =
+        normalize(expense.startDate) ===
+          normalize(session.serviceDate) &&
+        normalize(expense.category) ===
+          normalize(session.category) &&
+        normalize(expense.provider) ===
+          normalize(session.provider) &&
+        normalize(expense.description) ===
+          normalize(session.service) &&
+        Number(expense.amount) === Number(session.amount);
+
       if (
         session.invoiceNumber &&
         expense.invoiceNumber &&
         normalize(session.invoiceNumber) ===
           normalize(expense.invoiceNumber)
       ) {
-        return Number(expense.amount) === Number(session.amount);
+        return matchingDetails;
       }
 
-      // Fallback match for invoices without numbers
-      return (
-        normalize(expense.startDate) ===
-          normalize(session.serviceDate) &&
-        normalize(expense.category) ===
-          normalize(session.service) &&
-        Number(expense.amount) === Number(session.amount) &&
-        normalize(expense.provider) ===
-          normalize(session.provider)
-      );
+      return matchingDetails;
     });
 
     return {

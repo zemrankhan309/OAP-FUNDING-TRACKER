@@ -1,4 +1,9 @@
-import { saveExpense } from "../../../services/expenseEngine";
+import {
+  DUPLICATE_INVOICE_EXPENSE_ERROR,
+  saveExpense,
+} from "../../../services/expenseEngine";
+import { getExpenses } from "../../../services/expenseService";
+import { detectDuplicates } from "./duplicateDetector";
 
 import type { ImportableTherapySession } from "../types/invoice";
 
@@ -15,7 +20,6 @@ export async function importSessions(
   sessions: ImportableTherapySession[]
 ): Promise<ImportResult> {
   let imported = 0;
-  let skipped = 0;
   let failed = 0;
 
   const errors: string[] = [];
@@ -24,9 +28,17 @@ export async function importSessions(
     (session) => session.selected && !session.imported
   );
 
-  skipped = sessions.length - selectedSessions.length;
+  let skipped = sessions.length - selectedSessions.length;
 
-  for (const session of selectedSessions) {
+  const existingExpenses = await getExpenses(uid);
+  const sessionsToImport = detectDuplicates(
+    selectedSessions,
+    existingExpenses
+  ).filter((session) => !session.imported);
+
+  skipped += selectedSessions.length - sessionsToImport.length;
+
+  for (const session of sessionsToImport) {
     try {
       await saveExpense(uid, {
         allocationId,
@@ -57,12 +69,17 @@ export async function importSessions(
       session.imported = true;
       imported++;
     } catch (error) {
-      failed++;
-
       const message =
         error instanceof Error
           ? error.message
           : "Unknown import error";
+
+      if (message === DUPLICATE_INVOICE_EXPENSE_ERROR) {
+        skipped++;
+        continue;
+      }
+
+      failed++;
 
       errors.push(
         `${session.invoiceNumber} (${session.serviceDate}): ${message}`

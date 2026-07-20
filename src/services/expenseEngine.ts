@@ -1,4 +1,8 @@
-import { createExpense, updateExpense } from "./expenseService";
+import {
+  createExpense,
+  getExpenses,
+  updateExpense,
+} from "./expenseService";
 
 import type { Expense } from "../types/expense";
 
@@ -9,6 +13,32 @@ export type ExpenseInput = Omit<
   Expense,
   "id" | "createdAt"
 >;
+
+export const DUPLICATE_INVOICE_EXPENSE_ERROR =
+  "This invoice session was already imported.";
+
+function normalize(value: unknown): string {
+  return String(value ?? "").trim().toLowerCase();
+}
+
+function isDuplicateInvoiceExpense(
+  existingExpense: Expense,
+  expense: ExpenseInput
+) {
+  return (
+    normalize(existingExpense.invoiceNumber) ===
+      normalize(expense.invoiceNumber) &&
+    normalize(existingExpense.startDate) ===
+      normalize(expense.startDate) &&
+    normalize(existingExpense.category) ===
+      normalize(expense.category) &&
+    normalize(existingExpense.provider) ===
+      normalize(expense.provider) &&
+    normalize(existingExpense.description) ===
+      normalize(expense.description) &&
+    Number(existingExpense.amount) === Number(expense.amount)
+  );
+}
 
 /**
  * Basic validation shared by every expense source.
@@ -78,6 +108,21 @@ export async function saveExpense(
 
     source: expense.source ?? "manual",
   };
+
+  if (normalizedExpense.source === "invoice-import") {
+    const existingExpenses = await getExpenses(uid);
+
+    if (
+      existingExpenses.some((existingExpense) =>
+        isDuplicateInvoiceExpense(
+          existingExpense,
+          normalizedExpense
+        )
+      )
+    ) {
+      throw new Error(DUPLICATE_INVOICE_EXPENSE_ERROR);
+    }
+  }
 
   await createExpense(uid, normalizedExpense);
 }

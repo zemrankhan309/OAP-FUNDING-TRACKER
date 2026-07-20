@@ -1,4 +1,5 @@
 import { useState } from "react";
+import toast from "react-hot-toast";
 
 import { useAuth } from "../../../contexts/AuthContext";
 
@@ -10,6 +11,8 @@ import type {
 
 import { parseInvoice } from "../services/pdfParser";
 import { importSessions } from "../services/importSessions";
+import { detectDuplicates } from "../services/duplicateDetector";
+import { getExpenses } from "../../../services/expenseService";
 
 import AllocationSelector from "./AllocationSelector";
 import InvoiceSummary from "./InvoiceSummary";
@@ -46,6 +49,16 @@ export default function InvoiceUploader({
 
     if (!file) return;
 
+    if (authLoading) {
+      setError("Authentication is still loading.");
+      return;
+    }
+
+    if (!user) {
+      setError("You must be signed in before importing.");
+      return;
+    }
+
     setLoading(true);
     setError("");
     setInvoice(null);
@@ -59,12 +72,25 @@ export default function InvoiceUploader({
         return;
       }
 
-      const preparedSessions =
-        result.invoice.sessions.map((session) => ({
-          ...session,
-          selected: true,
-          imported: false,
-        }));
+      const existingExpenses = await getExpenses(user.uid);
+
+      const preparedSessions = detectDuplicates(
+        result.invoice.sessions,
+        existingExpenses
+      );
+
+      const duplicateCount = preparedSessions.filter(
+        (session) => session.imported
+      ).length;
+
+      if (duplicateCount > 0) {
+        toast(
+          `${duplicateCount} ${
+            duplicateCount === 1 ? "session was" : "sessions were"
+          } already imported and will be skipped.`,
+          { icon: "ℹ️" }
+        );
+      }
 
       setInvoice({
         ...result.invoice,
