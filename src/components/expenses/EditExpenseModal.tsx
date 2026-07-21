@@ -14,6 +14,9 @@ interface Props {
     name: string;
   }[];
 
+  providerOptions: string[];
+  therapistOptions: string[];
+
   onSave: (
     expense: Omit<Expense, "id" | "createdAt">
   ) => Promise<void>;
@@ -25,6 +28,8 @@ export default function EditExpenseModal({
   isOpen,
   expense,
   allocations,
+  providerOptions,
+  therapistOptions,
   onSave,
   onClose,
 }: Props) {
@@ -39,6 +44,8 @@ export default function EditExpenseModal({
     >
       <ExpenseForm
         allocations={allocations}
+        providerOptions={providerOptions}
+        therapistOptions={therapistOptions}
         editingExpense={expense}
         onSubmit={onSave}
         onCancelEdit={onClose}

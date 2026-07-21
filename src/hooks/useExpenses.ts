@@ -6,6 +6,8 @@ import { useSelectedChild } from "../contexts/SelectedChildContext";
 import type { Expense } from "../types/expense";
 import type { Allocation } from "../types/allocation";
 
+import { uniqueSortedAutocompleteOptions } from "../utils/autocomplete";
+
 import {
   loadExpenses,
   removeExpense,
@@ -24,6 +26,12 @@ export function useExpenses() {
 
   const [expenses, setExpenses] =
     useState<Expense[]>([]);
+
+  const [providerOptions, setProviderOptions] =
+    useState<string[]>([]);
+
+  const [therapistOptions, setTherapistOptions] =
+    useState<string[]>([]);
 
   const [allocations, setAllocations] =
     useState<Allocation[]>([]);
@@ -51,6 +59,20 @@ export function useExpenses() {
       );
 
       setExpenses(data.expenses);
+        setProviderOptions(
+          uniqueSortedAutocompleteOptions(
+            data.expenses.map((expense) =>
+              expense.provider ?? ""
+            )
+          )
+        );
+        setTherapistOptions(
+          uniqueSortedAutocompleteOptions(
+            data.expenses.map((expense) =>
+              expense.therapist ?? ""
+            )
+          )
+        );
       setAllocations(data.allocations);
     } catch (error) {
       console.error(error);
@@ -138,6 +160,9 @@ export function useExpenses() {
     loading,
 
     expenses,
+
+    providerOptions,
+    therapistOptions,
 
     allocations,
 

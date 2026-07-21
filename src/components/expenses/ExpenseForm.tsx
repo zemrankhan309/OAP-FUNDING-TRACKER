@@ -2,7 +2,6 @@ import { useEffect, useState } from "react";
 import {
   Wallet,
   Tag,
-  Building2,
   FileText,
   Calendar,
   StickyNote,
@@ -11,6 +10,8 @@ import {
   X,
 } from "lucide-react";
 
+import AutocompleteInput from "../common/AutocompleteInput";
+
 import type { Expense } from "../../types/expense";
 
 interface Props {
@@ -18,6 +19,9 @@ interface Props {
     id: string;
     name: string;
   }[];
+
+  providerOptions: string[];
+  therapistOptions: string[];
 
   onSubmit: (
     expense: Omit<Expense, "id" | "createdAt">
@@ -28,16 +32,36 @@ interface Props {
   onCancelEdit?: () => void;
 }
 
+interface ExpenseFormState {
+  allocationId: string;
+  category: string;
+  provider: string;
+  therapist: string;
+  description: string;
+  amount: string;
+  startDate: string;
+  endDate: string;
+  notes: string;
+}
+
 export default function ExpenseForm({
   allocations,
+  providerOptions,
+  therapistOptions,
   onSubmit,
   editingExpense,
   onCancelEdit,
 }: Props) {
-  const emptyExpense = {
+  const STORAGE_ALLOCATION_KEY =
+    "oap:lastSelectedAllocation";
+  const STORAGE_CATEGORY_KEY =
+    "oap:lastSelectedCategory";
+
+  const emptyExpense: ExpenseFormState = {
     allocationId: "",
     category: "ABA Therapy",
     provider: "",
+    therapist: "",
     description: "",
     amount: "",
     startDate: "",
@@ -46,7 +70,9 @@ export default function ExpenseForm({
   };
 
   const [saving, setSaving] = useState(false);
-  const [expense, setExpense] = useState<any>(emptyExpense);
+  const [expense, setExpense] = useState<ExpenseFormState>(
+    emptyExpense
+  );
 
   useEffect(() => {
     if (editingExpense) {
@@ -54,23 +80,63 @@ export default function ExpenseForm({
         allocationId: editingExpense.allocationId,
         category: editingExpense.category,
         provider: editingExpense.provider,
+        therapist:
+          editingExpense.therapist ?? "",
         description: editingExpense.description,
-        amount: editingExpense.amount,
+        amount: String(editingExpense.amount),
         startDate: editingExpense.startDate,
         endDate: editingExpense.endDate,
         notes: editingExpense.notes ?? "",
       });
-    } else {
-      setExpense(emptyExpense);
+      return;
     }
-  }, [editingExpense]);
 
-  function update(field: string, value: any) {
-    setExpense((prev: any) => ({
+    const savedAllocationId =
+      localStorage.getItem(
+        STORAGE_ALLOCATION_KEY
+      );
+    const savedCategory =
+      localStorage.getItem(STORAGE_CATEGORY_KEY);
+
+    setExpense({
+      allocationId:
+        savedAllocationId ||
+        allocations[0]?.id ||
+        "",
+      category: savedCategory ||
+        "ABA Therapy",
+      provider: "",
+      therapist: "",
+      description: "",
+      amount: "",
+      startDate: "",
+      endDate: "",
+      notes: "",
+    });
+  }, [editingExpense, allocations]);
+
+  function update<K extends keyof ExpenseFormState>(
+    field: K,
+    value: ExpenseFormState[K]
+  ) {
+    setExpense((prev) => ({
       ...prev,
       [field]: value,
     }));
   }
+
+  useEffect(() => {
+    if (!editingExpense) {
+      localStorage.setItem(
+        STORAGE_ALLOCATION_KEY,
+        expense.allocationId
+      );
+      localStorage.setItem(
+        STORAGE_CATEGORY_KEY,
+        expense.category
+      );
+    }
+  }, [expense.allocationId, expense.category, editingExpense]);
 
   async function handleSubmit(
     e: React.FormEvent<HTMLFormElement>
@@ -229,25 +295,32 @@ export default function ExpenseForm({
 
         {/* Provider */}
 
-        <div>
-          <label className="mb-2 flex items-center gap-2 font-medium">
-            <Building2 size={18} />
-            Provider
-          </label>
+        <AutocompleteInput
+          id="provider"
+          label="Provider"
+          value={expense.provider}
+          onChange={(value) =>
+            update("provider", value)
+          }
+          options={providerOptions}
+          placeholder="Provider or clinic"
+          required
+          className=""
+        />
 
-          <input
-            type="text"
-            value={expense.provider}
-            onChange={(e) =>
-              update(
-                "provider",
-                e.target.value
-              )
-            }
-            placeholder="Provider or clinic"
-            className={inputClass}
-          />
-        </div>
+        {/* Therapist */}
+
+        <AutocompleteInput
+          id="therapist"
+          label="Therapist"
+          value={expense.therapist}
+          onChange={(value) =>
+            update("therapist", value)
+          }
+          options={therapistOptions}
+          placeholder="Therapist name"
+          className=""
+        />
 
         {/* Amount */}
 

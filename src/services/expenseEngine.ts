@@ -62,9 +62,8 @@ function validateExpense(expense: ExpenseInput) {
     throw new Error("Provider is required.");
   }
 
-  if (!expense.description.trim()) {
-    throw new Error("Description is required.");
-  }
+  // Description is optional
+  expense.description = expense.description?.trim() ?? "";
 
   if (!expense.startDate) {
     throw new Error("Start date is required.");
@@ -95,7 +94,7 @@ export async function saveExpense(
 
     provider: expense.provider.trim(),
 
-    description: expense.description.trim(),
+    description: expense.description?.trim() ?? "",
 
     notes: expense.notes?.trim() ?? "",
 
@@ -142,7 +141,7 @@ export async function saveExistingExpense(
 
     provider: expense.provider.trim(),
 
-    description: expense.description.trim(),
+    description: expense.description?.trim() ?? "",
 
     notes: expense.notes?.trim() ?? "",
 

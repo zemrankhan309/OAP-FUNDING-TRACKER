@@ -20,10 +20,12 @@ import SessionTable from "./SessionTable";
 
 interface Props {
   allocations: Allocation[];
+  onImportComplete: () => void;
 }
 
 export default function InvoiceUploader({
   allocations,
+  onImportComplete,
 }: Props) {
   const { user, loading: authLoading } = useAuth();
 
@@ -76,10 +78,16 @@ export default function InvoiceUploader({
         user.uid
       );
 
+      const relevantExpenses = allocationId
+        ? existingExpenses.filter(
+            (expense) => expense.allocationId === allocationId
+          )
+        : existingExpenses;
+
       const preparedSessions =
         detectDuplicates(
           result.invoice.sessions,
-          existingExpenses
+          relevantExpenses
         );
 
       const duplicateCount =
@@ -156,6 +164,7 @@ export default function InvoiceUploader({
       );
 
       setSessions([...sessions]);
+      onImportComplete();
     } catch (err) {
       setError(
         err instanceof Error

@@ -11,6 +11,9 @@ interface Props {
     name: string;
   }[];
 
+  providerOptions: string[];
+  therapistOptions: string[];
+
   onSave: (
     expense: Omit<Expense, "id" | "createdAt">
   ) => Promise<void>;
@@ -21,6 +24,8 @@ interface Props {
 export default function ExpenseModal({
   isOpen,
   allocations,
+  providerOptions,
+  therapistOptions,
   onSave,
   onClose,
 }: Props) {
@@ -33,6 +38,8 @@ export default function ExpenseModal({
     >
       <ExpenseForm
         allocations={allocations}
+        providerOptions={providerOptions}
+        therapistOptions={therapistOptions}
         onSubmit={onSave}
       />
     </Modal>

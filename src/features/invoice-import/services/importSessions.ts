@@ -31,9 +31,13 @@ export async function importSessions(
   let skipped = sessions.length - selectedSessions.length;
 
   const existingExpenses = await getExpenses(uid);
+  const relevantExpenses = existingExpenses.filter(
+    (expense) => expense.allocationId === allocationId
+  );
+
   const sessionsToImport = detectDuplicates(
     selectedSessions,
-    existingExpenses
+    relevantExpenses
   ).filter((session) => !session.imported);
 
   skipped += selectedSessions.length - sessionsToImport.length;

@@ -105,25 +105,7 @@ export async function deleteChild(
   const batch = writeBatch(db);
 
   //
-  // Delete expenses
-  //
-  const expensesRef = collection(
-    db,
-    "users",
-    uid,
-    "expenses"
-  );
-
-  const expensesSnapshot = await getDocs(
-    query(expensesRef, where("childId", "==", childId))
-  );
-
-  expensesSnapshot.forEach((docSnap) => {
-    batch.delete(docSnap.ref);
-  });
-
-  //
-  // Delete allocations
+  // Delete allocations first so we can remove any expenses tied to them
   //
   const allocationsRef = collection(
     db,
@@ -136,9 +118,37 @@ export async function deleteChild(
     query(allocationsRef, where("childId", "==", childId))
   );
 
+  const allocationIds = allocationsSnapshot.docs.map(
+    (allocation) => allocation.id
+  );
+
   allocationsSnapshot.forEach((docSnap) => {
     batch.delete(docSnap.ref);
   });
+
+  if (allocationIds.length > 0) {
+    const expensesRef = collection(
+      db,
+      "users",
+      uid,
+      "expenses"
+    );
+
+    const chunks = [] as string[][];
+    for (let i = 0; i < allocationIds.length; i += 10) {
+      chunks.push(allocationIds.slice(i, i + 10));
+    }
+
+    for (const chunk of chunks) {
+      const expenseSnapshot = await getDocs(
+        query(expensesRef, where("allocationId", "in", chunk))
+      );
+
+      expenseSnapshot.forEach((docSnap) => {
+        batch.delete(docSnap.ref);
+      });
+    }
+  }
 
   //
   // Delete child

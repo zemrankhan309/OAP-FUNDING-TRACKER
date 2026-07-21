@@ -71,7 +71,24 @@ export default function ChildSelector() {
     }
 
     loadChildren();
-  }, [user]);
+  }, [user, selectedChild]);
+
+  useEffect(() => {
+    if (
+      selectedChild &&
+      children.length > 0 &&
+      !children.some(
+        (child) => child.id === selectedChild.id
+      )
+    ) {
+      const firstActive =
+        children.find(
+          (child) => child.status === "active"
+        ) ?? children[0];
+
+      setSelectedChild(firstActive);
+    }
+  }, [children, selectedChild, setSelectedChild]);
 
   return (
     <div className="flex items-center gap-3">

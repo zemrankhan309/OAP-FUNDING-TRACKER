@@ -9,12 +9,15 @@ interface Props {
   allocations: Allocation[];
 
   onClose: () => void;
+
+  onImportComplete: () => void;
 }
 
 export default function ImportStatementModal({
   isOpen,
   allocations,
   onClose,
+  onImportComplete,
 }: Props) {
   return (
     <Modal
@@ -25,6 +28,7 @@ export default function ImportStatementModal({
     >
       <InvoiceUploader
         allocations={allocations}
+        onImportComplete={onImportComplete}
       />
     </Modal>
   );

@@ -19,12 +19,15 @@ export default function Expenses() {
     loading,
     expenses,
     allocations,
+    providerOptions,
+    therapistOptions,
     editingExpense,
     saveExpense,
     updateExistingExpense,
     deleteExistingExpense,
     edit,
     cancelEdit,
+    refresh,
   } = useExpenses();
 
   const [search, setSearch] = useState("");
@@ -107,6 +110,8 @@ export default function Expenses() {
         <ExpenseModal
           isOpen={isAddExpenseOpen}
           allocations={allocations}
+          providerOptions={providerOptions}
+          therapistOptions={therapistOptions}
           onSave={async (expense) => {
             await saveExpense(expense);
             setIsAddExpenseOpen(false);
@@ -120,6 +125,10 @@ export default function Expenses() {
           isOpen={isImportOpen}
           allocations={allocations}
           onClose={() => setIsImportOpen(false)}
+          onImportComplete={async () => {
+            await refresh();
+            setIsImportOpen(false);
+          }}
         />
 
         {/* Edit Expense */}
@@ -128,6 +137,8 @@ export default function Expenses() {
           isOpen={editingExpense !== null}
           expense={editingExpense}
           allocations={allocations}
+          providerOptions={providerOptions}
+          therapistOptions={therapistOptions}
           onSave={updateExistingExpense}
           onClose={cancelEdit}
         />

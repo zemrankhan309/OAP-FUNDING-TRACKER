@@ -9,6 +9,7 @@ import ChildForm, {
 import ChildCard from "../components/children/ChildCard";
 
 import { useAuth } from "../contexts/AuthContext";
+import { useSelectedChild } from "../contexts/SelectedChildContext";
 
 import type { Child } from "../types/child";
 
@@ -23,6 +24,7 @@ import {
 
 export default function Children() {
   const { user } = useAuth();
+  const { selectedChild, setSelectedChild } = useSelectedChild();
 
   const [children, setChildren] = useState<Child[]>([]);
 
@@ -118,6 +120,10 @@ export default function Children() {
 
     try {
       await deleteChild(user.uid, id);
+
+      if (selectedChild?.id === id) {
+        setSelectedChild(null);
+      }
 
       await loadChildren();
     } catch (error) {
