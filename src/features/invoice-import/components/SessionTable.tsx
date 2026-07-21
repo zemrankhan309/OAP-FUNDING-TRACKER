@@ -4,7 +4,7 @@ interface Props {
   sessions: ImportableTherapySession[];
   importing: boolean;
 
-  onToggle: (invoiceNumber: string) => void;
+  onToggle: (sessionId: string) => void;
   onSelectAll: () => void;
   onClearAll: () => void;
   onImport: () => void;
@@ -67,7 +67,7 @@ export default function SessionTable({
           <tbody>
             {sessions.map((session) => (
               <tr
-                key={session.invoiceNumber}
+                key={session.id}
                 className={session.imported ? "bg-green-50" : ""}
               >
                 <td className="border p-2 text-center">
@@ -75,9 +75,7 @@ export default function SessionTable({
                     type="checkbox"
                     checked={session.selected}
                     disabled={session.imported}
-                    onChange={() =>
-                      onToggle(session.invoiceNumber)
-                    }
+                    onChange={() => onToggle(session.id)}
                   />
                 </td>
 

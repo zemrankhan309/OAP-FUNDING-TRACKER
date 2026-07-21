@@ -72,21 +72,27 @@ export default function InvoiceUploader({
         return;
       }
 
-      const existingExpenses = await getExpenses(user.uid);
-
-      const preparedSessions = detectDuplicates(
-        result.invoice.sessions,
-        existingExpenses
+      const existingExpenses = await getExpenses(
+        user.uid
       );
 
-      const duplicateCount = preparedSessions.filter(
-        (session) => session.imported
-      ).length;
+      const preparedSessions =
+        detectDuplicates(
+          result.invoice.sessions,
+          existingExpenses
+        );
+
+      const duplicateCount =
+        preparedSessions.filter(
+          (session) => session.imported
+        ).length;
 
       if (duplicateCount > 0) {
         toast(
           `${duplicateCount} ${
-            duplicateCount === 1 ? "session was" : "sessions were"
+            duplicateCount === 1
+              ? "session was"
+              : "sessions were"
           } already imported and will be skipped.`,
           { icon: "ℹ️" }
         );
@@ -161,12 +167,14 @@ export default function InvoiceUploader({
     }
   }
 
-  function toggleSession(
-    invoiceNumber: string
-  ) {
+  /**
+   * Toggle a single therapy session.
+   * Uses the unique session id instead of the invoice number.
+   */
+  function toggleSession(id: string) {
     setSessions((current) =>
       current.map((session) =>
-        session.invoiceNumber === invoiceNumber
+        session.id === id
           ? {
               ...session,
               selected: !session.selected,

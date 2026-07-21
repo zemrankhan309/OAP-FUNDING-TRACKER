@@ -117,33 +117,30 @@ export async function setActiveAllocation(
   uid: string,
   allocationId: string
 ) {
-  const allocationsRef = collection(
+  const allocationRef = collection(
     db,
     "users",
     uid,
     "allocations"
   );
 
+  const allocQuery = query(allocationRef);
+  const snapshot = await getDocs(allocQuery);
+
+  const targetAlloc = snapshot.docs.find(
+    (d) => d.id === allocationId
+  );
+
+  if (!targetAlloc) {
+    throw new Error("Allocation not found.");
+  }
+
+  const childId = targetAlloc.data().childId;
+
   await runTransaction(db, async (transaction) => {
-    const snapshot = await transaction.get(
-      allocationsRef
-    );
-
-    const current = snapshot.docs.find(
-      (d) => d.id === allocationId
-    );
-
-    if (!current) {
-      throw new Error("Allocation not found.");
-    }
-
-    const childId = current.data().childId;
-
-    snapshot.docs.forEach((allocation) => {
-      if (
-        allocation.data().childId !== childId
-      ) {
-        return;
+    for (const allocation of snapshot.docs) {
+      if (allocation.data().childId !== childId) {
+        continue;
       }
 
       transaction.update(allocation.ref, {
@@ -154,7 +151,7 @@ export async function setActiveAllocation(
             ? "active"
             : "inactive",
       });
-    });
+    }
   });
 }
 

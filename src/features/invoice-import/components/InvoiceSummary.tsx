@@ -9,10 +9,17 @@ export default function InvoiceSummary({
   invoice,
   selectedCount,
 }: Props) {
+  const totalInvoiced = invoice.sessions.reduce(
+    (sum, session) => sum + session.amount,
+    0
+  );
+
+  const firstSession = invoice.sessions[0];
+
   return (
     <div className="rounded-lg border bg-white p-6 shadow">
       <h2 className="mb-4 text-xl font-semibold">
-        Statement Summary
+        Invoice Summary
       </h2>
 
       <div className="grid gap-4 md:grid-cols-2">
@@ -22,13 +29,15 @@ export default function InvoiceSummary({
         </div>
 
         <div>
-          <strong>Account:</strong>{" "}
-          {invoice.summary.accountName || "-"}
+          <strong>Invoice #:</strong>{" "}
+          {firstSession?.invoiceNumber || "-"}
         </div>
 
         <div>
-          <strong>Statement Date:</strong>{" "}
-          {invoice.summary.statementDate || "-"}
+          <strong>Invoice Date:</strong>{" "}
+          {firstSession?.invoiceDate ||
+            invoice.summary.statementDate ||
+            "-"}
         </div>
 
         <div>
@@ -37,18 +46,13 @@ export default function InvoiceSummary({
         </div>
 
         <div>
-          <strong>Total Invoiced:</strong>{" "}
-          ${invoice.summary.totalInvoiced.toFixed(2)}
+          <strong>Total Sessions:</strong>{" "}
+          {invoice.sessions.length}
         </div>
 
         <div>
-          <strong>Total Paid:</strong>{" "}
-          ${invoice.summary.totalPaid.toFixed(2)}
-        </div>
-
-        <div>
-          <strong>Balance:</strong>{" "}
-          ${invoice.summary.balance.toFixed(2)}
+          <strong>Total Amount:</strong>{" "}
+          ${totalInvoiced.toFixed(2)}
         </div>
 
         <div>

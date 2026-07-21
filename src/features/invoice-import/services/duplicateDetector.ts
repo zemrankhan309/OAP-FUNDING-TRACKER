@@ -41,6 +41,8 @@ export function detectDuplicates(
       ...session,
       imported: duplicate,
       selected: !duplicate,
+      confidence: (session as any).confidence ?? 75,
+      rawText: (session as any).rawText ?? "",
     };
   });
 }
